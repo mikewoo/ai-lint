@@ -119,10 +119,10 @@ program
   .command('init')
   .description('generate a healthy AI config template')
   .argument('[path]', 'directory to create the template in', process.cwd())
-  .option('-t, --type <name>', 'template type: claude, agents, agent, skill, design')
+  .option('-t, --type <name>', 'template type: claude, agents, skill, design')
   .action(async (initPath: string, options: { type?: string }) => {
     // Resolve type: if the path argument is one of the template names, treat it as the type
-    const templateNames = ['claude', 'agents', 'agent', 'skill', 'design']
+    const templateNames = ['claude', 'agents', 'skill', 'design']
     let type = options.type || 'claude'
     let targetDir = resolve(initPath || process.cwd())
 
@@ -168,44 +168,6 @@ program
       },
       agents: {
         file: 'AGENTS.md',
-        content: [
-          '# Project Overview',
-          '',
-          'Brief description of this project for AI coding agents.',
-          '',
-          '## Build & Test Commands',
-          '- Build: `<insert build command>`',
-          '- Test: `<insert test command with exact flags>`',
-          '- Lint: `<insert lint command>`',
-          '',
-          '## Code Style',
-          '- Language: `<language>`',
-          '- Naming: `<convention>`',
-          '- Formatter: `<tool>`',
-          '',
-          '## Testing Guidelines',
-          '- Framework: `<test framework>`',
-          '- Coverage target: `<N>%`',
-          '- Run before committing',
-          '',
-          '## Architecture Constraints',
-          '- Module structure: `<describe layout>`',
-          '- Dependency rules: `<describe constraints>`',
-          '- API boundaries: `<describe interfaces>`',
-          '',
-          '## Security Boundaries',
-          '- Never log credentials or secrets',
-          '- Validate all user inputs',
-          '- Sanitize outputs before rendering',
-          '',
-          '## Commit & PR Guidelines',
-          '- Follow conventional commits',
-          '- Keep PRs under 400 lines diff',
-          '- Include test evidence in PR description',
-        ].join('\n'),
-      },
-      agent: {
-        file: 'Agent.md',
         content: [
           '# Project Overview',
           '',
