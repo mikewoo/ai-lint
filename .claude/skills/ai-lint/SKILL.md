@@ -14,20 +14,17 @@ Run `npx al` to detect and fix issues in AI configuration files.
 - `npx al fix` — Apply auto-fixes
 - `npx al stats` — Show health score table
 - `npx al --cross-files` — Cross-file conflict and overlap detection
-- `npx al --ci --json` — CI mode with machine-readable output
 
 ## When to Use
 
-Run `npx al .` automatically after any of the following:
+Run `npx al .` automatically after:
 - Editing CLAUDE.md, AGENTS.md, or SKILL.md
-- Creating or modifying rules files (.cursorrules, .windsurfrules, etc.)
+- Creating or modifying rules files (.cursorrules, etc.)
 - User asks "check my config" or "is my CLAUDE.md healthy"
-- User commits AI config changes
-- Before generating a new SKILL.md
 
 ## After Running
 
-- If health score is 100/100, tell the user their config is clean
-- If issues are found, summarize the top problems and suggest `npx al fix --dry-run`
+- If health score 100/100, tell user config is clean
+- If issues found, summarize problems and suggest `npx al fix --dry-run`
 - If fixable issues exist, offer to run `npx al fix`
-- If conflicts or null-effects are found, explain they require human judgment
+- If conflicts or null-effects found, explain they require human judgment

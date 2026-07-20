@@ -422,4 +422,156 @@ program
     console.log(`\n  ${result.files.length} files  |  Average health: ${avg}/100  |  Overall: ${avgStatus}\n`)
   })
 
+// ai-lint install <tool>
+program
+  .command('install')
+  .description('install ai-lint skill/rule into an AI coding tool')
+  .argument('<tool>', 'tool to install into: claude, codex, opencode, qoder, cursor, windsurf, gemini, copilot, all')
+  .option('--global', 'install user-wide (where supported)')
+  .action(async (tool: string, options: { global?: boolean }) => {
+    const { writeFileSync, mkdirSync, existsSync } = await import('node:fs')
+    const { resolve, join } = await import('node:path')
+    const cwd = process.cwd()
+    const home = process.env.HOME || process.env.USERPROFILE || '~'
+    const isGlobal = options.global
+
+    const skillContent = [
+      '---',
+      'name: AI Lint',
+      'description: Run ai-lint to check AI config file health. Use after editing CLAUDE.md, AGENTS.md, SKILL.md, or any rules files. Use when the user asks to check config quality, fix config issues, or wants a health score.',
+      '---',
+      '',
+      '# AI Lint',
+      '',
+      'Run `npx al` to detect and fix issues in AI configuration files.',
+      '',
+      '## Commands',
+      '',
+      '- `npx al .` — Quick scan of all AI config files',
+      '- `npx al fix --dry-run` — Preview fixes before applying',
+      '- `npx al fix` — Apply auto-fixes',
+      '- `npx al stats` — Show health score table',
+      '- `npx al --cross-files` — Cross-file conflict and overlap detection',
+      '',
+      '## When to Use',
+      '',
+      'Run `npx al .` automatically after:',
+      '- Editing CLAUDE.md, AGENTS.md, or SKILL.md',
+      '- Creating or modifying rules files (.cursorrules, etc.)',
+      '- User asks "check my config" or "is my CLAUDE.md healthy"',
+      '',
+      '## After Running',
+      '',
+      '- If health score 100/100, tell user config is clean',
+      '- If issues found, summarize problems and suggest `npx al fix --dry-run`',
+      '- If fixable issues exist, offer to run `npx al fix`',
+      '- If conflicts or null-effects found, explain they require human judgment',
+    ].join('\n')
+
+    const configRule = [
+      '- After editing any config file, run `npx al .` to check for issues',
+      '- Run `npx al fix --dry-run` before committing config changes',
+    ].join('\n')
+
+    const installers: Record<string, { paths: string[]; content: string; label: string; method: string }> = {
+      claude: {
+        paths: isGlobal
+          ? [join(home, '.claude', 'skills', 'ai-lint')]
+          : [join(cwd, '.claude', 'skills', 'ai-lint')],
+        content: skillContent,
+        label: 'Claude Code',
+        method: 'skill',
+      },
+      codex: {
+        paths: isGlobal
+          ? [join(home, '.codex', 'skills', 'ai-lint')]
+          : [join(cwd, '.codex', 'skills', 'ai-lint')],
+        content: skillContent,
+        label: 'Codex CLI',
+        method: 'skill',
+      },
+      opencode: {
+        paths: isGlobal
+          ? [join(home, '.opencode', 'skills', 'ai-lint')]
+          : [join(cwd, '.opencode', 'skills', 'ai-lint')],
+        content: skillContent,
+        label: 'OpenCode',
+        method: 'skill',
+      },
+      qoder: {
+        paths: [join(cwd, 'AGENTS.md')],
+        content: configRule,
+        label: 'Qoder',
+        method: 'append to AGENTS.md',
+      },
+      cursor: {
+        paths: [join(cwd, '.cursorrules')],
+        content: configRule,
+        label: 'Cursor',
+        method: 'append to .cursorrules',
+      },
+      windsurf: {
+        paths: [join(cwd, '.windsurfrules')],
+        content: configRule,
+        label: 'Windsurf',
+        method: 'append to .windsurfrules',
+      },
+      gemini: {
+        paths: [join(cwd, 'GEMINI.md')],
+        content: configRule,
+        label: 'Gemini CLI',
+        method: 'append to GEMINI.md',
+      },
+      copilot: {
+        paths: [join(cwd, 'copilot-instructions.md')],
+        content: configRule,
+        label: 'GitHub Copilot',
+        method: 'append to copilot-instructions.md',
+      },
+    }
+
+    const tools = tool === 'all'
+      ? Object.keys(installers)
+      : tool in installers ? [tool] : []
+
+    if (tools.length === 0) {
+      console.log(`\n  Unknown tool: "${tool}"\n`)
+      console.log(`  Available: ${Object.keys(installers).join(', ')}, all\n`)
+      process.exit(1)
+    }
+
+    let installed = 0
+    for (const t of tools) {
+      const cfg = installers[t]
+      const isSkill = cfg.method === 'skill'
+
+      for (const p of cfg.paths) {
+        try {
+          const dir = isSkill ? p : resolve(p, '..')
+          const file = isSkill ? join(p, 'SKILL.md') : p
+
+          if (!existsSync(dir)) {
+            mkdirSync(dir, { recursive: true })
+          }
+
+          if (isSkill) {
+            writeFileSync(file, cfg.content, 'utf-8')
+            console.log(`  ✅ ${cfg.label} — Skill installed at ${file}`)
+          } else {
+            const prefix = existsSync(file) ? '\n\n' : ''
+            const fd = (await import('node:fs')).appendFileSync
+            fd(file, prefix + cfg.content, 'utf-8')
+            console.log(`  ✅ ${cfg.label} — Rule appended to ${file}`)
+          }
+          installed++
+        } catch (err) {
+          console.log(`  ❌ ${cfg.label} — Failed: ${err}`)
+        }
+      }
+    }
+
+    console.log(`\n  ${installed} integration${installed !== 1 ? 's' : ''} installed.\n`)
+    console.log('  Verify by asking your AI agent: "Check my config health"\n')
+  })
+
 program.parse()
