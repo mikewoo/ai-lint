@@ -25,6 +25,7 @@ npx al
   - [`ai-lint stats` — Health Overview](#ai-lint-stats----health-overview)
   - [`ai-lint init` — Generate Templates](#ai-lint-init----generate-templates)
   - [`ai-lint explain` — Rule Details](#ai-lint-explain----rule-details)
+  - [`ai-lint install` — Tool Integration](#ai-lint-install----tool-integration)
   - [CI Mode](#ci-mode)
   - [Programmatic Usage](#programmatic-usage)
 - [Detection Rules](#detection-rules)
@@ -278,6 +279,35 @@ ai-lint explain no-duplicate
 - Understanding why a rule flagged something
 - Learning which files a rule applies to
 - Onboarding new contributors to the rule set
+
+### `ai-lint install` — Tool Integration
+
+Install ai-lint into your AI coding agent so it can check configs during conversations.
+
+```bash
+al install claude     # Claude Code (skill)
+al install codex      # Codex CLI (skill)
+al install opencode   # OpenCode (skill)
+al install qoder      # Qoder (rule in AGENTS.md)
+al install cursor     # Cursor (rule in .cursorrules)
+al install windsurf   # Windsurf (rule in .windsurfrules)
+al install gemini     # Gemini CLI (rule in GEMINI.md)
+al install copilot    # GitHub Copilot (rule in copilot-instructions.md)
+al install all        # All 8 tools at once
+
+# User-wide install (skills only)
+al install codex --global
+```
+
+**What it does:**
+- **Skills** (Claude Code, Codex, OpenCode): Creates a `SKILL.md` the agent loads on demand
+- **Rules** (Qoder, Cursor, Windsurf, Gemini, Copilot): Appends a config quality directive
+
+**Verify:** Ask your AI agent "Check my config health" — it will run `npx al .`.
+
+Full guide: [`integrations/README.md`](integrations/README.md)
+
+---
 
 ### CI Mode
 

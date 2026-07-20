@@ -25,6 +25,7 @@ npx al
   - [`ai-lint stats` — 健康总览](#ai-lint-stats----健康总览)
   - [`ai-lint init` — 生成模板](#ai-lint-init----生成模板)
   - [`ai-lint explain` — 规则详情](#ai-lint-explain----规则详情)
+  - [`ai-lint install` — 工具集成](#ai-lint-install----工具集成)
   - [CI 模式](#ci-模式)
   - [编程调用](#编程调用)
 - [检测规则](#检测规则)
@@ -277,6 +278,29 @@ ai-lint explain no-duplicate
 - 理解为什么某条规则标记了问题
 - 了解规则适用哪些文件类型
 - 帮助新贡献者了解规则集
+
+### `ai-lint install` — 工具集成
+
+将 ai-lint 安装到 AI 编程工具中，让 AI 在对话中自动检查配置。
+
+```bash
+al install claude     # Claude Code（Skill）
+al install codex      # Codex CLI（Skill）
+al install opencode   # OpenCode（Skill）
+al install qoder      # Qoder（写入 AGENTS.md）
+al install cursor     # Cursor（写入 .cursorrules）
+al install windsurf   # Windsurf（写入 .windsurfrules）
+al install gemini     # Gemini CLI（写入 GEMINI.md）
+al install copilot    # GitHub Copilot（写入 copilot-instructions.md）
+al install all        # 全部 8 个工具
+al install codex --global  # 全局安装
+```
+
+**验证：** 对 AI 说 "Check my config health" — 它会自动运行 `npx al .`。
+
+完整指南：[`integrations/README.md`](integrations/README.md)
+
+---
 
 ### CI 模式
 
