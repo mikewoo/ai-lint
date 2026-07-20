@@ -1,0 +1,68 @@
+{
+  "name": "ai-lint",
+  "version": "0.1.0",
+  "description": "The missing linter for AI prompt files. Like ESLint for JavaScript, but for your CLAUDE.md, rules, and skills.",
+  "type": "module",
+  "bin": {
+    "ai-lint": "dist/index.js"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "prepublishOnly": "npm run build"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "ai",
+    "lint",
+    "claude",
+    "claude-code",
+    "cursor",
+    "windsurf",
+    "gemini",
+    "copilot",
+    "config",
+    "quality",
+    "eslint",
+    "static-analysis",
+    "token",
+    "claude-md",
+    "rules",
+    "skills"
+  ],
+  "license": "MIT",
+  "author": "mingming <ahqsgmm@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mikewoo/ai-lint.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mikewoo/ai-lint/issues"
+  },
+  "homepage": "https://github.com/mikewoo/ai-lint#readme",
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "fs-extra": "^11.2.0",
+    "pathe": "^1.1.2"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^22.0.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.0.0"
+  }
+}
