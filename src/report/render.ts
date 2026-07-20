@@ -29,7 +29,7 @@ const SEVERITY_COLOR: Record<Severity, (s: string) => string> = {
 /**
  * 渲染终端输出（ESLint 风格）。
  */
-export function render(result: LintResult, rootDir: string): string {
+export function render(result: LintResult, _rootDir: string): string {
   if (result.files.length === 0) {
     return chalk.dim('\n  No AI config files found.\n')
   }

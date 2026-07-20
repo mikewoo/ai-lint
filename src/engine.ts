@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 import { findFiles, shortPath } from './discovery/find-files.js'
 import type { FileResult, LintResult } from './report/render.js'
 import { summarize } from './report/render.js'
@@ -13,6 +13,19 @@ export interface LintOptions {
   dryRun?: boolean
 }
 
+export interface FixDetail {
+  file: string
+  ruleId: string
+  message: string
+  line?: number
+}
+
+export interface FixReport {
+  result: LintResult
+  fixed: number
+  details: FixDetail[]
+}
+
 /**
  * 执行完整的 lint 流程。
  */
@@ -24,7 +37,6 @@ export function runLint(options: LintOptions = {}): LintResult {
 
   for (const file of files) {
     const content = readFileSync(file.path, 'utf-8')
-    const displayName = shortPath(file.path, cwd)
     const issues = lintFile(content, file.path, file.name)
 
     fileResults.push({ file, issues })
@@ -35,15 +47,20 @@ export function runLint(options: LintOptions = {}): LintResult {
 
 /**
  * 执行 fix 流程。
+ *
+ * 对每个文件依次：检测 → 修复 fixable → 写入磁盘（非 dry-run）→ 重新检测。
  */
-export function runFix(options: LintOptions = {}): { result: LintResult; fixed: number } {
+export function runFix(options: LintOptions = {}): FixReport {
   const cwd = options.cwd || process.cwd()
   const files = findFiles(cwd)
   let fixedCount = 0
+  const fixDetails: FixDetail[] = []
   const fileResults: FileResult[] = []
 
   for (const file of files) {
     let content = readFileSync(file.path, 'utf-8')
+    const displayName = shortPath(file.path, cwd)
+    let fileFixed = 0
 
     // 先检测所有问题
     const allIssues = lintFile(content, file.path, file.name)
@@ -62,6 +79,13 @@ export function runFix(options: LintOptions = {}): { result: LintResult; fixed: 
           if (newContent !== content) {
             content = newContent
             fixedCount++
+            fileFixed++
+            fixDetails.push({
+              file: displayName,
+              ruleId: issue.ruleId,
+              message: issue.message,
+              line: issue.line,
+            })
           }
         } catch {
           // fix 失败，跳过
@@ -69,8 +93,9 @@ export function runFix(options: LintOptions = {}): { result: LintResult; fixed: 
       }
     }
 
-    if (!options.dryRun && fixedCount > 0) {
-      // 实际写入（需要 fs.writeFileSync，这里暂略，Day 6 完善）
+    // 实际写入磁盘
+    if (!options.dryRun && fileFixed > 0) {
+      writeFileSync(file.path, content, 'utf-8')
     }
 
     // 修复后重新检测
@@ -80,5 +105,5 @@ export function runFix(options: LintOptions = {}): { result: LintResult; fixed: 
   }
 
   const result = summarize(fileResults)
-  return { result, fixed: fixedCount }
+  return { result, fixed: fixedCount, details: fixDetails }
 }

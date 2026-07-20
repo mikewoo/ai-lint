@@ -37,12 +37,20 @@ program
   .option('--dry-run', 'preview fixes without writing to disk')
   .action((fixPath: string, options: { dryRun?: boolean }) => {
     const cwd = fixPath || process.cwd()
-    const { result, fixed } = runFix({ cwd, fix: true, dryRun: options.dryRun })
+    const { result, fixed, details } = runFix({ cwd, fix: true, dryRun: options.dryRun })
+
+    // 显示逐条修复详情
+    for (const d of details) {
+      const prefix = options.dryRun ? '  ◌' : '  ✅'
+      console.log(`${prefix} ${d.ruleId.padEnd(24)} ${d.file}${d.line ? `:${d.line}` : ''}`)
+    }
 
     if (options.dryRun) {
       console.log(`\n  Would fix ${fixed} issue${fixed !== 1 ? 's' : ''} (dry-run)\n`)
-    } else {
+    } else if (fixed > 0) {
       console.log(`\n  ✅ Fixed ${fixed} issue${fixed !== 1 ? 's' : ''}\n`)
+    } else {
+      console.log('\n  No fixable issues found\n')
     }
 
     console.log(render(result, cwd))

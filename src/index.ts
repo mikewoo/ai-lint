@@ -1,4 +1,8 @@
 export { parseRules } from './parser/markdown.js'
 export { parseFrontmatter } from './parser/frontmatter.js'
+export { simplifyText, estimateSavings } from './fixer/simplify.js'
+export { deduplicateContent, textSimilarity } from './fixer/deduplicate.js'
+export { runLint, runFix } from './engine.js'
+export { findFiles } from './discovery/find-files.js'
 export type { RuleEntry, LintIssue, Severity, SkillMeta } from './types.js'
 export type { Rule, CrossFileRule } from './rules/types.js'

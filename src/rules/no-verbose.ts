@@ -1,4 +1,5 @@
 import type { LintIssue } from '../types.js'
+import { simplifyText } from '../fixer/simplify.js'
 import { parseRules } from '../parser/markdown.js'
 
 /**
@@ -136,16 +137,7 @@ export const noVerbose = {
     const targetLine = issue.line - 1
     if (targetLine < 0 || targetLine >= lines.length) return content
 
-    const raw = lines[targetLine]
-
-    // 应用所有匹配的 verbose pattern 替换
-    let fixed = raw
-    for (const { pattern, replacement } of VERBOSE_PATTERNS) {
-      pattern.lastIndex = 0
-      fixed = fixed.replace(pattern, replacement)
-    }
-
-    lines[targetLine] = fixed
+    lines[targetLine] = simplifyText(lines[targetLine])
     return lines.join('\n')
   },
 }

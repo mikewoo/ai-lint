@@ -1,4 +1,5 @@
 import type { LintIssue } from '../types.js'
+import { deduplicateContent } from '../fixer/deduplicate.js'
 import { parseRules } from '../parser/markdown.js'
 
 /**
@@ -50,15 +51,7 @@ export const noDuplicate = {
   },
 
   fix(content: string, issue: LintIssue): string {
-    if (!issue.line) return content
-
-    const lines = content.split('\n')
-    // 删除 issue 所在行（第二次出现），保留第一次
-    const targetLine = issue.line - 1 // 转为 0-based
-    if (targetLine >= 0 && targetLine < lines.length) {
-      lines.splice(targetLine, 1)
-    }
-    return lines.join('\n')
+    return deduplicateContent(content, issue)
   },
 }
 
