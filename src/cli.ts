@@ -115,10 +115,18 @@ program
   .command('init')
   .description('generate a healthy AI config template')
   .argument('[path]', 'directory to create the template in', process.cwd())
-  .option('--type <name>', 'template type: claude, agents, skill, design', 'claude')
+  .option('-t, --type <name>', 'template type: claude, agents, skill, design')
   .action(async (initPath: string, options: { type?: string }) => {
-    const targetDir = resolve(initPath || process.cwd())
-    const type = options.type || 'claude'
+    // Resolve type: if the path argument is one of the template names, treat it as the type
+    const templateNames = ['claude', 'agents', 'skill', 'design']
+    let type = options.type || 'claude'
+    let targetDir = resolve(initPath || process.cwd())
+
+    if (!options.type && templateNames.includes(initPath)) {
+      type = initPath
+      targetDir = process.cwd()
+    }
+
     const { writeFileSync, mkdirSync } = await import('node:fs')
 
     const templates: Record<string, { file: string; content: string }> = {
