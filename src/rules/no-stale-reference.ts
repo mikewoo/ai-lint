@@ -88,6 +88,8 @@ function extractPaths(text: string): string[] {
   for (const match of text.matchAll(FILE_PATH_RE)) {
     const p = match[1]
     if (/^v?\d+\.\d+/.test(p)) continue
+    // Skip URLs (http://, https://, //domain.com)
+    if (/^(?:https?:)?\/\//.test(p)) continue
     if (!seen.has(p)) {
       seen.add(p)
       relativePaths.push({ path: p, start: match.index!, end: match.index! + match[0].length })
@@ -106,6 +108,8 @@ function extractPaths(text: string): string[] {
       (r) => absStart >= r.start && absStart < r.end,
     )
     if (overlapped) continue
+    // Skip URLs
+    if (/^(?:https?:)?\/\//.test(p)) continue
     if (seen.has(p)) continue
     seen.add(p)
     paths.push(p)

@@ -113,12 +113,15 @@ export const noVerbose = {
           const tokensSaved = estimateTokenSavings(match[0], replacement)
 
           if (tokensSaved >= MIN_TOKEN_SAVINGS) {
+            const savingsPct = replacementLen > 0
+              ? Math.round((originalLen - replacementLen) / originalLen * 100)
+              : 100 // empty replacement = 100% removal
             issues.push({
               ruleId: 'no-verbose',
               severity: 'warning',
               file: filePath,
               line: rule.line,
-              message: `${description} — saves ~${Math.round(originalLen / replacementLen || originalLen)}%`,
+              message: `${description} — saves ~${savingsPct}%`,
               tokenWaste: tokensSaved,
               fixable: true,
             })
