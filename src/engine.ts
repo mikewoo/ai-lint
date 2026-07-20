@@ -39,7 +39,8 @@ function resolveFiles(options: LintOptions): { cwd: string; files: FoundFile[] }
 
   if (options.targetFile) {
     const targetPath = resolve(cwd, options.targetFile)
-    if (!existsSync(targetPath)) {
+    // Prevent path traversal: refuse files outside the working directory
+    if (!targetPath.startsWith(resolve(cwd)) || !existsSync(targetPath)) {
       return { cwd, files: [] }
     }
     const name = basename(targetPath)

@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs'
-import { dirname, resolve } from 'node:path'
+import { dirname, relative, resolve } from 'node:path'
 import type { LintIssue } from '../types.js'
 import { parseRules } from '../parser/markdown.js'
 
@@ -28,6 +28,8 @@ export const noStaleReference = {
 
       for (const ref of paths) {
         const fullPath = resolve(baseDir, ref)
+        // Skip paths that escape the config file's directory scope
+        if (!isPathInScope(fullPath, baseDir)) continue
         if (!existsSync(fullPath)) {
           issues.push({
             ruleId: 'no-stale-reference',
@@ -47,6 +49,7 @@ export const noStaleReference = {
       if (issues.some((i) => i.message.includes(ref))) continue
 
       const fullPath = resolve(baseDir, ref)
+      if (!isPathInScope(fullPath, baseDir)) continue
       if (!existsSync(fullPath)) {
         // Find the line where the reference appears
         const lines = content.split('\n')
@@ -116,4 +119,13 @@ function extractPaths(text: string): string[] {
   }
 
   return paths
+}
+
+/**
+ * Check that a resolved path does not escape the project root.
+ * Prevents probing files outside the working directory.
+ */
+function isPathInScope(resolvedPath: string, root: string): boolean {
+  const rel = relative(root, resolvedPath)
+  return !rel.startsWith('..') && !rel.startsWith('/')
 }
