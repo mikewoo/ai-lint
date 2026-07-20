@@ -29,6 +29,7 @@ npx al
   - [Programmatic Usage](#programmatic-usage)
 - [Detection Rules](#detection-rules)
 - [Configuration Files Supported](#configuration-files-supported)
+- [Integrations — AI Tools](#integrations----ai-tools)
 - [Why ai-lint?](#why-ai-lint)
 - [Philosophy](#philosophy)
 - [Acknowledgments](#acknowledgments)
@@ -370,6 +371,23 @@ const single = runLint({
 - `skills/*/` directories
 - `.claude/skills/*/` directories
 - `.cursor/rules/` directory (`.mdc` files)
+
+---
+
+## Integrations — AI Tools
+
+Install ai-lint into your AI coding agent so it can check its own config files during conversations. Full guide: [`integrations/README.md`](integrations/README.md)
+
+| Tool | Install | What It Does |
+|------|---------|-------------|
+| **Claude Code** | `cp integrations/claude-code/SKILL.md .claude/skills/ai-lint/` | Claude auto-checks config after edits |
+| **Codex CLI** | `cp integrations/codex/SKILL.md .codex/skills/ai-lint/` | Codex auto-checks config after edits |
+| **OpenCode** | `cp integrations/opencode/SKILL.md .opencode/skills/ai-lint/` | OpenCode auto-checks config after edits |
+| **Qoder** | `npx al init agents` | AGENTS.md includes config quality rule |
+| **Cursor** | `cat integrations/cursor/.cursorrules >> .cursorrules` | Cursor checks config after edits |
+| **Windsurf** | `cat integrations/windsurf/.windsurfrules >> .windsurfrules` | Windsurf checks config after edits |
+| **Gemini CLI** | `cat integrations/gemini/GEMINI.md >> GEMINI.md` | Gemini checks config after edits |
+| **GitHub Copilot** | `cat integrations/copilot/copilot-instructions.md >> copilot-instructions.md` | Copilot checks config after edits |
 
 ---
 

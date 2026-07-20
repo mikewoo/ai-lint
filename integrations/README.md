@@ -1,102 +1,174 @@
-# AI Lint Integrations
+# Integrations — Install ai-lint into Your AI Coding Tool
 
-Make ai-lint available inside your AI coding agent — so the agent can check, fix, and monitor its own config files from within a conversation.
+Once ai-lint is [installed](../README.md#installation), pick your tool below and follow the steps. Each integration takes under a minute and enables the AI agent to check, fix, and monitor its own config files during conversations.
 
-## Quick Setup
+---
 
-Choose your tool below. Each integration takes less than a minute.
-
-### Claude Code
-
-Copy the skill file into your project:
+## Prerequisites
 
 ```bash
+npm install -g ai-lint   # or: npx ai-lint
+```
+
+---
+
+## Claude Code
+
+Claude Code uses **Skills** — a standard way to teach Claude new capabilities.
+
+**Install:**
+```bash
+# From the ai-lint repo
 cp integrations/claude-code/SKILL.md .claude/skills/ai-lint/SKILL.md
+
+# Or create it manually
+mkdir -p .claude/skills/ai-lint
 ```
 
-Or let Claude Code create it: "Create a skill that runs npx al to check AI config health after edits."
+Then paste the content of [`integrations/claude-code/SKILL.md`](./claude-code/SKILL.md) into `.claude/skills/ai-lint/SKILL.md`.
 
-### Codex CLI
+**Verify:** Ask Claude in a conversation: "Check my config health." Claude will run `npx al .` and report the results.
 
+**When it triggers:**
+- After editing CLAUDE.md, AGENTS.md, or any SKILL.md
+- When you ask "check my config" or "is my CLAUDE.md healthy"
+- Before committing AI config changes
+
+---
+
+## Codex CLI
+
+Codex CLI supports **Agent Skills** via `~/.codex/skills/` (user-wide) or `.codex/skills/` (per-project).
+
+**Install (per-project):**
 ```bash
-cp integrations/claude-code/SKILL.md .codex/skills/ai-lint/SKILL.md
+mkdir -p .codex/skills/ai-lint
+cp integrations/codex/SKILL.md .codex/skills/ai-lint/SKILL.md
 ```
 
-### OpenCode
-
+**Install (user-wide, applies to all projects):**
 ```bash
-cp integrations/claude-code/SKILL.md .opencode/skills/ai-lint/SKILL.md
+mkdir -p ~/.codex/skills/ai-lint
+cp integrations/codex/SKILL.md ~/.codex/skills/ai-lint/SKILL.md
 ```
 
-### Cursor
+**Verify:** Ask Codex: "Run ai-lint to check the config health." It will execute `npx al .`.
 
-Add this line to your `.cursorrules`:
+---
 
-```markdown
-- After editing any config file (CLAUDE.md, AGENTS.md, .cursorrules), run `npx al .` to check for issues. Run `npx al fix --dry-run` before committing.
+## OpenCode
+
+OpenCode reads skills from `.opencode/skills/`.
+
+**Install:**
+```bash
+mkdir -p .opencode/skills/ai-lint
+cp integrations/opencode/SKILL.md .opencode/skills/ai-lint/SKILL.md
 ```
 
-Or copy the example:
+**Verify:** Ask OpenCode: "Check my AI config health with ai-lint."
 
+---
+
+## Qoder
+
+Qoder reads `AGENTS.md`. Add the config quality rule directly.
+
+**Install:**
+```bash
+echo '' >> AGENTS.md
+echo '## Config Quality' >> AGENTS.md
+echo '- After editing any config file, run `npx al .` to check for issues' >> AGENTS.md
+echo '- Run `npx al fix --dry-run` before committing config changes' >> AGENTS.md
+```
+
+Or generate a fresh AGENTS.md with the rule already included:
+```bash
+npx al init agents
+```
+
+**Verify:** Ask Qoder to edit AGENTS.md — it will run `npx al .` afterward.
+
+---
+
+## Cursor
+
+Cursor reads `.cursorrules` for project-wide instructions.
+
+**Install:**
 ```bash
 cat integrations/cursor/.cursorrules >> .cursorrules
 ```
 
-### Windsurf
+Or manually add these lines to `.cursorrules`:
+```markdown
+- After editing any config file (CLAUDE.md, AGENTS.md, .cursorrules, SKILL.md),
+  run `npx al .` to check for issues
+- Run `npx al fix --dry-run` before committing config changes
+- Run `npx al --cross-files` if you add or modify skills
+```
 
+**Verify:** Ask Cursor to modify `.cursorrules` — it will check with ai-lint after.
+
+---
+
+## Windsurf
+
+Windsurf reads `.windsurfrules`.
+
+**Install:**
 ```bash
 cat integrations/windsurf/.windsurfrules >> .windsurfrules
 ```
 
-### Gemini CLI
+Or manually add:
+```markdown
+After editing any config file, run `npx al .` to check for issues.
+Run `npx al fix --dry-run` before committing config changes.
+```
 
+---
+
+## Gemini CLI
+
+**Install:**
 ```bash
 cat integrations/gemini/GEMINI.md >> GEMINI.md
 ```
 
-### GitHub Copilot
+---
 
+## GitHub Copilot
+
+**Install:**
 ```bash
 cat integrations/copilot/copilot-instructions.md >> copilot-instructions.md
 ```
 
-### Qoder
+---
 
-Qoder reads AGENTS.md. The `al init agents` template already includes the config quality rule. Ensure your AGENTS.md has:
+## Universal Method (Works With Every Tool)
 
-```markdown
-## Config Quality
-- After editing any config file, run `npx al .` to check for issues
-- Run `npx al fix --dry-run` before committing config changes
-```
-
-### All Tools (Universal)
-
-Add to every AI config file (`CLAUDE.md`, `AGENTS.md`, etc.):
+Add this to **any** AI config file (`CLAUDE.md`, `AGENTS.md`, `.cursorrules`, etc.):
 
 ```markdown
 - After editing any config file, run `npx al .` to check for issues
 ```
 
-This is the simplest method and works with every tool. The `al init` templates include it by default.
+The `al init` templates already include this rule by default.
+Run `npx al init` to generate a new config file with it.
 
-## How It Works
+---
 
-1. AI agent edits a config file (CLAUDE.md, rules, skills)
-2. Skill/rule triggers the agent to run `npx al .`
-3. Agent sees the health score and issues
-4. Agent suggests `npx al fix` or `npx al fix --dry-run`
-5. Config stays healthy automatically
+## Tool Coverage Summary
 
-## Supported Tools (8)
-
-| Tool | Config File | Skill Support |
-|------|------------|:--:|
-| Claude Code | CLAUDE.md | ✅ |
-| Codex CLI | AGENTS.md | ✅ |
-| OpenCode | AGENTS.md / CLAUDE.md | ✅ |
-| Qoder | AGENTS.md | — |
-| Cursor | .cursorrules | — |
-| Windsurf | .windsurfrules | — |
-| Gemini CLI | GEMINI.md | — |
-| GitHub Copilot | copilot-instructions.md | — |
+| Tool | Method | File | ai-lint Checks |
+|------|--------|------|:--:|
+| Claude Code | Skill | `.claude/skills/ai-lint/SKILL.md` | All 12 rules |
+| Codex CLI | Skill | `.codex/skills/ai-lint/SKILL.md` | All 12 rules |
+| OpenCode | Skill | `.opencode/skills/ai-lint/SKILL.md` | All 12 rules |
+| Qoder | AGENTS.md rule | `AGENTS.md` → Config Quality section | All 12 rules |
+| Cursor | .cursorrules rule | `.cursorrules` | All 12 rules |
+| Windsurf | .windsurfrules rule | `.windsurfrules` | All 12 rules |
+| Gemini CLI | GEMINI.md rule | `GEMINI.md` | All 12 rules |
+| GitHub Copilot | instructions rule | `copilot-instructions.md` | All 12 rules |
