@@ -1,3 +1,4 @@
+import { truncate } from '../utils.js'
 import type { LintIssue } from '../types.js'
 import { parseRules } from '../parser/markdown.js'
 
@@ -159,8 +160,4 @@ function extractNumbers(texts: string[]): number[] {
     if (matches) nums.push(...matches.map(Number))
   }
   return [...new Set(nums)]
-}
-
-function truncate(text: string, maxLen: number): string {
-  return text.length > maxLen ? text.slice(0, maxLen) + '...' : text
 }

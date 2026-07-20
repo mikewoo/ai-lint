@@ -1,5 +1,5 @@
-import { existsSync } from 'node:fs'
-import { dirname, join, resolve } from 'node:path'
+import { existsSync, readFileSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
 import type { LintIssue } from '../types.js'
 import { parseRules } from '../parser/markdown.js'
 
@@ -99,10 +99,7 @@ export const noOverconstrain = {
           if (!existsSync(fullPath)) return false
           if (cf === 'package.json') {
             try {
-              const pkg = JSON.parse(
-                // eslint-disable-next-line @typescript-eslint/no-require-imports
-                require('node:fs').readFileSync(fullPath, 'utf-8'),
-              )
+              const pkg = JSON.parse(readFileSync(fullPath, 'utf-8'))
               const deps = { ...pkg.dependencies, ...pkg.devDependencies }
               const techLower = tech.toLowerCase()
               return Object.keys(deps).some((d) => d.toLowerCase().includes(techLower))

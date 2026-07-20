@@ -1,3 +1,5 @@
+import { estimateTokens } from '../utils.js'
+
 /**
  * General-purpose text simplification map.
  *
@@ -71,12 +73,4 @@ export function simplifyText(text: string): string {
  */
 export function estimateSavings(original: string, simplified: string): number {
   return estimateTokens(original) - estimateTokens(simplified)
-}
-
-function estimateTokens(text: string): number {
-  let tokens = 0
-  for (const char of text) {
-    tokens += /[一-鿿]/.test(char) ? 0.67 : 0.25
-  }
-  return Math.round(tokens)
 }

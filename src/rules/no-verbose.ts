@@ -1,3 +1,4 @@
+import { estimateTokens } from '../utils.js'
 import type { LintIssue } from '../types.js'
 import { simplifyText } from '../fixer/simplify.js'
 import { parseRules } from '../parser/markdown.js'
@@ -147,16 +148,4 @@ export const noVerbose = {
 
 function estimateTokenSavings(original: string, replacement: string): number {
   return estimateTokens(original) - estimateTokens(replacement)
-}
-
-function estimateTokens(text: string): number {
-  let tokens = 0
-  for (const char of text) {
-    if (/[一-鿿]/.test(char)) {
-      tokens += 0.67
-    } else {
-      tokens += 0.25
-    }
-  }
-  return Math.round(tokens)
 }

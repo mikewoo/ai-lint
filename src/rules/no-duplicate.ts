@@ -1,3 +1,4 @@
+import { estimateTokens, truncate } from '../utils.js'
 import type { LintIssue } from '../types.js'
 import { deduplicateContent } from '../fixer/deduplicate.js'
 import { parseRules } from '../parser/markdown.js'
@@ -32,7 +33,7 @@ export const noDuplicate = {
         const first = occurrences[0]
         // Use original text (non-lowercase) for readability
         const displayText = first.raw.replace(/^\s*[-*+]\s+|\s*\d+[.)]\s+/, '').trim()
-        const tokenWaste = estimateTokens(displayText) * (occurrences.length - 1)
+        const tokenWaste = Math.max(1, estimateTokens(displayText)) * (occurrences.length - 1)
         const lines = occurrences.map((o) => o.line)
 
         issues.push({
@@ -53,24 +54,4 @@ export const noDuplicate = {
   fix(content: string, issue: LintIssue): string {
     return deduplicateContent(content, issue)
   },
-}
-
-/**
- * Estimate token count for a string.
- * Rough rule: Latin 1 token ≈ 4 chars, CJK 1 token ≈ 1.5 chars.
- */
-function estimateTokens(text: string): number {
-  let tokens = 0
-  for (const char of text) {
-    if (/[一-鿿]/.test(char)) {
-      tokens += 0.67 // CJK char ≈ 1.5 chars/token → 1 CJK char ≈ 0.67 token
-    } else {
-      tokens += 0.25 // Latin char ≈ 4 chars/token
-    }
-  }
-  return Math.max(1, Math.round(tokens))
-}
-
-function truncate(text: string, maxLen: number): string {
-  return text.length > maxLen ? text.slice(0, maxLen) + '...' : text
 }

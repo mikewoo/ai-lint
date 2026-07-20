@@ -1,5 +1,6 @@
 export { parseRules } from './parser/markdown.js'
 export { parseFrontmatter } from './parser/frontmatter.js'
+export { truncate, estimateTokens } from './utils.js'
 export { simplifyText, estimateSavings } from './fixer/simplify.js'
 export { deduplicateContent, textSimilarity } from './fixer/deduplicate.js'
 export { runLint, runFix } from './engine.js'

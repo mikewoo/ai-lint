@@ -1,3 +1,4 @@
+import { truncate } from '../utils.js'
 import type { LintIssue } from '../types.js'
 import { textSimilarity } from '../fixer/deduplicate.js'
 import { parseRules } from '../parser/markdown.js'
@@ -19,23 +20,36 @@ export const noSemanticDuplicate = {
 
     if (rules.length < 2) return issues
 
+    // Track lines already grouped to avoid reporting each pair individually
+    const grouped = new Set<number>()
+
     for (let i = 0; i < rules.length; i++) {
+      if (grouped.has(rules[i].line)) continue
+
+      const similarLines: number[] = [rules[i].line]
       for (let j = i + 1; j < rules.length; j++) {
+        if (grouped.has(rules[j].line)) continue
         const sim = textSimilarity(rules[i].text, rules[j].text)
 
-        // Skip literal duplicates (already handled by no-duplicate)
         if (sim > LITERAL_SAME_THRESHOLD) continue
-
         if (sim >= SIMILARITY_THRESHOLD) {
-          issues.push({
-            ruleId: 'no-semantic-duplicate',
-            severity: 'warning',
-            file: filePath,
-            line: rules[j].line,
-            message: `"${truncate(rules[i].text, 40)}" is semantically similar to (line ${rules[i].line}) "${truncate(rules[j].text, 40)}" (${Math.round(sim * 100)}%)`,
-            fixable: true,
-          })
+          similarLines.push(rules[j].line)
+          grouped.add(rules[j].line)
         }
+      }
+
+      // Report only if there are actual duplicates in this cluster
+      if (similarLines.length > 1) {
+        grouped.add(rules[i].line)
+        const lines = similarLines.join(', ')
+        issues.push({
+          ruleId: 'no-semantic-duplicate',
+          severity: 'warning',
+          file: filePath,
+          line: similarLines[1],
+          message: `Semantically similar rules on lines ${lines} (cluster of ${similarLines.length})`,
+          fixable: true,
+        })
       }
     }
 
@@ -43,7 +57,7 @@ export const noSemanticDuplicate = {
   },
 
   fix(content: string, issue: LintIssue): string {
-    // Remove the later (shorter) occurrence, keeping the earlier one
+    // Remove the duplicate line, keeping the first occurrence
     if (!issue.line) return content
     const lines = content.split('\n')
     const targetIdx = issue.line - 1
@@ -52,8 +66,4 @@ export const noSemanticDuplicate = {
     }
     return lines.join('\n')
   },
-}
-
-function truncate(text: string, maxLen: number): string {
-  return text.length > maxLen ? text.slice(0, maxLen) + '...' : text
 }
