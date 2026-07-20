@@ -6,7 +6,10 @@ import { noDuplicate } from '../src/rules/no-duplicate.js'
 import { noGlobalPathRule } from '../src/rules/no-global-path-rule.js'
 import { noMissingFrontmatter } from '../src/rules/no-missing-frontmatter.js'
 import { noConflict } from '../src/rules/no-conflict.js'
+import { noNullEffect } from '../src/rules/no-null-effect.js'
+import { noOverconstrain } from '../src/rules/no-overconstrain.js'
 import { noSemanticDuplicate } from '../src/rules/no-semantic-duplicate.js'
+import { noSkillBloat } from '../src/rules/no-skill-bloat.js'
 import { noStaleReference } from '../src/rules/no-stale-reference.js'
 import { noVerbose } from '../src/rules/no-verbose.js'
 
@@ -474,5 +477,135 @@ describe('no-conflict', () => {
 
     const issues = noConflict.checkCross(fileA, fileB)
     expect(issues.length).toBeGreaterThan(0)
+  })
+})
+
+// ============================================================
+// no-overconstrain
+// ============================================================
+
+describe('no-overconstrain', () => {
+  it('检测不适用当前项目的技术栈约束', () => {
+    // 引用 GraphQL 但当前目录没有 package.json/graphql 配置文件
+    const content = '- All GraphQL queries must include error handling with Apollo Client\n'
+    const issues = noOverconstrain.check(content, '/tmp/nonexistent-dir/CLAUDE.md')
+
+    expect(issues.length).toBeGreaterThan(0)
+    expect(issues[0].ruleId).toBe('no-overconstrain')
+    expect(issues[0].severity).toBe('warning')
+    expect(issues[0].fixable).toBe(false)
+  })
+
+  it('检测多种技术栈的过度约束', () => {
+    const content = [
+      '- Use React hooks for all state management',
+      '- Configure Docker containers for local development',
+    ].join('\n')
+
+    const issues = noOverconstrain.check(content, '/tmp/nonexistent-dir/CLAUDE.md')
+
+    // 两个技术栈都不在该目录中，应该报告两次
+    expect(issues.length).toBeGreaterThanOrEqual(2)
+  })
+
+  it('通用规则不报告过度约束', () => {
+    const content = '- Use TypeScript strict mode\n- Format with Biome\n- Run tests regularly\n'
+    const issues = noOverconstrain.check(content, '/tmp/test.md')
+
+    expect(issues).toHaveLength(0)
+  })
+})
+
+// ============================================================
+// no-null-effect
+// ============================================================
+
+describe('no-null-effect', () => {
+  it('检测中文空洞表述', () => {
+    const cases = [
+      '- 确保代码质量达到标准',
+      '- 写出干净整洁的代码',
+      '- 注意安全性和性能',
+      '- 遵循最佳实践和良好做法',
+      '- 代码要保持一致性和统一风格',
+    ]
+
+    for (const c of cases) {
+      const issues = noNullEffect.check(c, 'CLAUDE.md')
+      expect(issues.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('检测英文空洞表述', () => {
+    const cases = [
+      '- Make sure the code is high quality',
+      '- Write clean and beautiful code',
+      '- Code should be elegant and maintainable',
+      '- Follow best practices at all times',
+      '- Keep it simple and clean',
+    ]
+
+    for (const c of cases) {
+      const issues = noNullEffect.check(c, 'CLAUDE.md')
+      expect(issues.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('具体可执行的规则不报告', () => {
+    const content = [
+      '- Use TypeScript strict mode',
+      '- Run npm test before committing',
+      '- Format code with Biome',
+    ].join('\n')
+
+    const issues = noNullEffect.check(content, 'CLAUDE.md')
+    expect(issues).toHaveLength(0)
+  })
+
+  it('包含具体操作词的不报告（即使有小空洞）', () => {
+    // "注意检查" 虽然以"注意"开头但包含"检查"（具体操作）
+    const content = '- 注意检查代码格式和类型安全\n'
+    const issues = noNullEffect.check(content, 'test.md')
+
+    // 包含 "check" / "检查" → 不算空洞
+    expect(issues).toHaveLength(0)
+  })
+})
+
+// ============================================================
+// no-skill-bloat
+// ============================================================
+
+describe('no-skill-bloat', () => {
+  it('Skill 规则数超限报告', () => {
+    const rules = Array.from({ length: 25 }, (_, i) => `- Rule number ${i + 1} for testing\n`)
+    const content = ['---', 'name: test', 'description: test', '---', '# Skill', ...rules].join('\n')
+
+    const issues = noSkillBloat.check(content, 'skills/test/SKILL.md', 20)
+
+    expect(issues.length).toBeGreaterThan(0)
+    expect(issues[0].ruleId).toBe('no-skill-bloat')
+    expect(issues[0].message).toContain('25')
+  })
+
+  it('Skill 行数超限报告', () => {
+    const lines = Array.from({ length: 200 }, (_, i) => `line ${i + 1}`)
+    const content = lines.join('\n')
+
+    const issues = noSkillBloat.check(content, 'skills/test/SKILL.md', 100, 150)
+
+    const lineIssues = issues.filter((i) => i.message.includes('行'))
+    expect(lineIssues.length).toBeGreaterThan(0)
+  })
+
+  it('正常大小的 Skill 不报告', () => {
+    const content = ['---', 'name: normal', 'description: A normal skill', '---', '# Normal', '- Rule one', '- Rule two'].join('\n')
+
+    const issues = noSkillBloat.check(content, 'skills/normal/SKILL.md')
+    expect(issues).toHaveLength(0)
+  })
+
+  it('只对 SKILL.md 生效', () => {
+    expect(noSkillBloat.files).toEqual(['SKILL.md'])
   })
 })

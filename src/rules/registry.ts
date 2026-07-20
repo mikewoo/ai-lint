@@ -4,7 +4,10 @@ import { noConflict } from './no-conflict.js'
 import { noDuplicate } from './no-duplicate.js'
 import { noGlobalPathRule } from './no-global-path-rule.js'
 import { noMissingFrontmatter } from './no-missing-frontmatter.js'
+import { noNullEffect } from './no-null-effect.js'
+import { noOverconstrain } from './no-overconstrain.js'
 import { noSemanticDuplicate } from './no-semantic-duplicate.js'
+import { noSkillBloat } from './no-skill-bloat.js'
 import { noStaleReference } from './no-stale-reference.js'
 import { noVerbose } from './no-verbose.js'
 
@@ -18,6 +21,9 @@ const rules = [
   noGlobalPathRule,
   noConflict,
   noMissingFrontmatter,
+  noOverconstrain,
+  noNullEffect,
+  noSkillBloat,
 ] as const
 
 /**
