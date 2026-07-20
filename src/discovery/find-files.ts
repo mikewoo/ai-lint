@@ -33,7 +33,8 @@ export interface FoundFile {
  * 2. Files under .claude/ directory
  * 3. SKILL.md under skills/ directory (direct child dirs)
  * 4. SKILL.md under .claude/skills/ directory
- * 5. .mdc files under .cursor/rules/ directory
+ * 5. SKILL.md under .opencode/skills/ directory (OpenCode)
+ * 6. .mdc files under .cursor/rules/ directory
  *
  * @param rootDir - Root directory to scan
  * @returns List of discovered files
@@ -93,7 +94,23 @@ export function findFiles(rootDir: string): FoundFile[] {
     }
   }
 
-  // 5. .mdc files under .cursor/rules/ directory
+  // 5. SKILL.md under .opencode/skills/ directory (OpenCode convention)
+  const opencodeSkillsDir = join(absRoot, '.opencode', 'skills')
+  if (existsSync(opencodeSkillsDir) && statSync(opencodeSkillsDir).isDirectory()) {
+    try {
+      const entries = readdirSync(opencodeSkillsDir)
+      for (const entry of entries) {
+        const skillPath = join(opencodeSkillsDir, entry, SKILL_FILE)
+        if (existsSync(skillPath) && statSync(skillPath).isFile()) {
+          found.push({ path: skillPath, name: SKILL_FILE, type: 'skill' })
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  // 6. .mdc files under .cursor/rules/ directory
   const cursorRulesDir = join(absRoot, '.cursor', 'rules')
   if (existsSync(cursorRulesDir) && statSync(cursorRulesDir).isDirectory()) {
     try {
