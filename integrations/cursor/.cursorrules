@@ -1,0 +1,5 @@
+# After editing any config file (CLAUDE.md, AGENTS.md, .cursorrules, SKILL.md),
+# run `npx al .` to check for issues. Run `npx al fix --dry-run` before committing.
+- After editing any config file, run `npx al .` to check for issues
+- Run `npx al fix --dry-run` before committing config changes
+- Run `npx al --cross-files` if you add or modify skills
