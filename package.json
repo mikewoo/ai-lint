@@ -14,8 +14,8 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "test": "vitest",
-    "test:run": "vitest run",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "lint": "biome check .",
     "format": "biome check --write .",
     "prepublishOnly": "npm run build"
