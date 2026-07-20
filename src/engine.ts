@@ -1,5 +1,8 @@
 import { readFileSync, writeFileSync } from 'node:fs'
+import { detectCrossFileConflicts } from './cross-files/conflict.js'
+import { detectSkillOverlap, type SkillInfo } from './cross-files/skill-overlap.js'
 import { findFiles, shortPath } from './discovery/find-files.js'
+import { parseFrontmatter } from './parser/frontmatter.js'
 import type { FileResult, LintResult } from './report/render.js'
 import { summarize } from './report/render.js'
 import { getFixer, lintFile } from './rules/registry.js'
@@ -11,6 +14,8 @@ export interface LintOptions {
   fix?: boolean
   /** --dry-run: 预览修复，不写入磁盘 */
   dryRun?: boolean
+  /** 是否启用跨文件检测 */
+  crossFiles?: boolean
 }
 
 export interface FixDetail {
@@ -106,4 +111,53 @@ export function runFix(options: LintOptions = {}): FixReport {
 
   const result = summarize(fileResults)
   return { result, fixed: fixedCount, details: fixDetails }
+}
+
+/**
+ * 跨文件检测：skill 重叠 + 跨文件冲突。
+ */
+export function runCrossFiles(options: LintOptions = {}): LintResult {
+  const cwd = options.cwd || process.cwd()
+  const files = findFiles(cwd)
+
+  // 1. 跨文件冲突检测
+  const conflictIssues = detectCrossFileConflicts(
+    files.map((f) => ({
+      path: f.path,
+      name: shortPath(f.path, cwd),
+      content: readFileSync(f.path, 'utf-8'),
+    })),
+  )
+
+  // 2. Skill 重叠检测
+  const skillFiles = files.filter((f) => f.type === 'skill')
+  const skills: SkillInfo[] = []
+
+  for (const sf of skillFiles) {
+    const content = readFileSync(sf.path, 'utf-8')
+    const meta = parseFrontmatter(content)
+    if (meta) {
+      const skillName = sf.path.split('/').slice(-2, -1)[0] || sf.name
+      skills.push({ name: skillName, meta, content, path: sf.path })
+    }
+  }
+
+  const overlapIssues = detectSkillOverlap(skills)
+
+  // 汇总：生成伪 FileResult
+  const allIssues = [...conflictIssues, ...overlapIssues]
+
+  const summary: LintResult = {
+    files: [
+      {
+        file: { path: cwd, name: 'cross-files', type: 'config' },
+        issues: allIssues,
+      },
+    ],
+    errors: allIssues.filter((i) => i.severity === 'error').length,
+    warnings: allIssues.filter((i) => i.severity === 'warning').length,
+    fixable: allIssues.filter((i) => i.fixable).length,
+  }
+
+  return summary
 }

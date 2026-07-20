@@ -5,6 +5,8 @@ import { maxLength } from '../src/rules/max-length.js'
 import { noDuplicate } from '../src/rules/no-duplicate.js'
 import { noGlobalPathRule } from '../src/rules/no-global-path-rule.js'
 import { noMissingFrontmatter } from '../src/rules/no-missing-frontmatter.js'
+import { noConflict } from '../src/rules/no-conflict.js'
+import { noSemanticDuplicate } from '../src/rules/no-semantic-duplicate.js'
 import { noStaleReference } from '../src/rules/no-stale-reference.js'
 import { noVerbose } from '../src/rules/no-verbose.js'
 
@@ -361,7 +363,116 @@ describe('no-missing-frontmatter', () => {
   })
 
   it('只对 SKILL.md 生效', () => {
-    // 此规则只检查 SKILL.md 文件
     expect(noMissingFrontmatter.files).toEqual(['SKILL.md'])
+  })
+})
+
+// ============================================================
+// no-semantic-duplicate
+// ============================================================
+
+describe('no-semantic-duplicate', () => {
+  it('检测语义相似但措辞不同的规则', () => {
+    const content = [
+      '- Always use TypeScript strict mode for new files',
+      '- Use TypeScript strict mode for all new files always',
+    ].join('\n')
+
+    const issues = noSemanticDuplicate.check(content, 'CLAUDE.md')
+
+    expect(issues.length).toBeGreaterThan(0)
+    expect(issues[0].ruleId).toBe('no-semantic-duplicate')
+    expect(issues[0].fixable).toBe(false)
+  })
+
+  it('完全相同的规则不报告（留给 no-duplicate）', () => {
+    const content = [
+      '- Use TypeScript strict mode',
+      '- Use TypeScript strict mode',
+    ].join('\n')
+
+    const issues = noSemanticDuplicate.check(content, 'test.md')
+    expect(issues).toHaveLength(0)
+  })
+
+  it('语义不相关的规则不报告', () => {
+    const content = [
+      '- Use TypeScript strict mode',
+      '- Run tests before committing',
+      '- Format with Biome',
+    ].join('\n')
+
+    const issues = noSemanticDuplicate.check(content, 'test.md')
+    expect(issues).toHaveLength(0)
+  })
+
+  it('单条规则不报错', () => {
+    const issues = noSemanticDuplicate.check('- One rule\n', 'test.md')
+    expect(issues).toHaveLength(0)
+  })
+})
+
+// ============================================================
+// no-conflict
+// ============================================================
+
+describe('no-conflict', () => {
+  it('检测缩进方式冲突 (tabs vs spaces)', () => {
+    const content = [
+      '- Use tabs for indentation',
+      '- Use spaces for indentation',
+    ].join('\n')
+
+    const issues = noConflict.check(content, 'test.md')
+
+    expect(issues.length).toBeGreaterThan(0)
+    expect(issues[0].ruleId).toBe('no-conflict')
+    expect(issues[0].severity).toBe('error')
+  })
+
+  it('检测分号使用冲突', () => {
+    const content = [
+      '- Always use semicolons at end of statements',
+      '- Do not use semicolons in your code',
+    ].join('\n')
+
+    const issues = noConflict.check(content, 'test.md')
+    expect(issues.length).toBeGreaterThan(0)
+  })
+
+  it('检测引号风格冲突', () => {
+    const content = [
+      '- Prefer single quotes for strings',
+      '- Use double quotes for all strings',
+    ].join('\n')
+
+    const issues = noConflict.check(content, 'test.md')
+    expect(issues.length).toBeGreaterThan(0)
+  })
+
+  it('无冲突的规则不报告', () => {
+    const content = [
+      '- Use TypeScript strict mode',
+      '- Run tests before committing',
+      '- Format code with Biome',
+    ].join('\n')
+
+    const issues = noConflict.check(content, 'test.md')
+    expect(issues).toHaveLength(0)
+  })
+
+  it('跨文件冲突检测', () => {
+    const fileA = {
+      content: '- Use tabs for indentation\n- Always use semicolons\n',
+      path: 'project/CLAUDE.md',
+    }
+
+    const fileB = {
+      content: '- Use spaces for indentation\n- Avoid semicolons\n',
+      path: 'project/AGENTS.md',
+    }
+
+    const issues = noConflict.checkCross(fileA, fileB)
+    expect(issues.length).toBeGreaterThan(0)
   })
 })

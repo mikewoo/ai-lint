@@ -1,18 +1,22 @@
 import type { LintIssue } from '../types.js'
 import { maxLength } from './max-length.js'
+import { noConflict } from './no-conflict.js'
 import { noDuplicate } from './no-duplicate.js'
 import { noGlobalPathRule } from './no-global-path-rule.js'
 import { noMissingFrontmatter } from './no-missing-frontmatter.js'
+import { noSemanticDuplicate } from './no-semantic-duplicate.js'
 import { noStaleReference } from './no-stale-reference.js'
 import { noVerbose } from './no-verbose.js'
 
 /** 已注册的单文件规则 */
 const rules = [
   noDuplicate,
+  noSemanticDuplicate,
   noVerbose,
   maxLength,
   noStaleReference,
   noGlobalPathRule,
+  noConflict,
   noMissingFrontmatter,
 ] as const
 

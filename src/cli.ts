@@ -1,6 +1,7 @@
 #! /usr/bin/env node
 import { Command } from 'commander'
-import { runLint, runFix } from './engine.js'
+import chalk from 'chalk'
+import { runCrossFiles, runLint, runFix } from './engine.js'
 import { render, renderJson } from './report/render.js'
 
 const program = new Command()
@@ -17,14 +18,31 @@ program
     const cwd = scanPath || process.cwd()
 
     const result = runLint({ cwd })
+    const crossResult = options.crossFiles ? runCrossFiles({ cwd }) : null
 
     if (options.json) {
-      console.log(renderJson(result))
+      if (crossResult) {
+        console.log(renderJson(crossResult))
+      } else {
+        console.log(renderJson(result))
+      }
     } else {
       console.log(render(result, cwd))
+      if (crossResult && crossResult.files[0]?.issues.length > 0) {
+        console.log(chalk.bold('\n  ── Cross-file Detection ──\n'))
+        for (const issue of crossResult.files[0].issues) {
+          const icon = issue.severity === 'error' ? '❌' : '⚠️'
+          const color = issue.severity === 'error' ? chalk.red : chalk.yellow
+          console.log(`  ${color(`${icon} ${issue.ruleId}`)}  ${issue.file}  ${issue.message}`)
+        }
+        console.log()
+      }
     }
 
-    if (options.ci && (result.errors > 0 || result.warnings > 0)) {
+    const totalErrors = result.errors + (crossResult?.errors || 0)
+    const totalWarnings = result.warnings + (crossResult?.warnings || 0)
+
+    if (options.ci && (totalErrors > 0 || totalWarnings > 0)) {
       process.exit(1)
     }
   })
