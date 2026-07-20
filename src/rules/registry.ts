@@ -26,16 +26,23 @@ const rules = [
   noSkillBloat,
 ] as const
 
+/** File name aliases: map variant names to canonical names for rule matching */
+const FILE_ALIASES: Record<string, string> = {
+  'DESIGN.md': 'CLAUDE.md',
+  'Agent.md': 'AGENTS.md',
+}
+
 /**
  * Get all rules applicable to a given file type.
  */
 export function getRulesForFile(fileName: string) {
+  const canonicalName = FILE_ALIASES[fileName] || fileName
   return rules.filter((r) =>
     r.files.some((f) =>
-      f === fileName ||
-      fileName.toLowerCase().endsWith(f.toLowerCase()) ||
+      f === canonicalName ||
+      canonicalName.toLowerCase().endsWith(f.toLowerCase()) ||
       f === '*' ||
-      (f === 'SKILL.md' && fileName.endsWith('SKILL.md')),
+      (f === 'SKILL.md' && canonicalName.endsWith('SKILL.md')),
     ),
   )
 }

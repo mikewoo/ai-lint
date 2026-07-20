@@ -5,6 +5,8 @@ import { basename, join, resolve } from 'node:path'
 const KNOWN_CONFIG_FILES = [
   'CLAUDE.md',
   'AGENTS.md',
+  'Agent.md',
+  'DESIGN.md',
   '.cursorrules',
   '.windsurfrules',
   'GEMINI.md',
