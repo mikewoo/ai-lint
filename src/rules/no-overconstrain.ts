@@ -4,10 +4,11 @@ import type { LintIssue } from '../types.js'
 import { parseRules } from '../parser/markdown.js'
 
 /**
- * 技术关键词 → 对应的项目存在性检测文件
+ * Tech stack keywords → corresponding project presence detection files.
  *
- * 如果规则提到了某个技术栈关键词，但项目中找不到对应的配置文件，
- * 则这条规则可能是过度约束（对不适用场景的约束）。
+ * If a rule mentions a tech stack keyword but the corresponding config file
+ * is not found in the project, the rule may be over-constraining
+ * (constraining a context where it does not apply).
  */
 const TECH_INDICATORS: Array<{
   keywords: RegExp
@@ -91,9 +92,9 @@ export const noOverconstrain = {
         keywords.lastIndex = 0
         if (!keywords.test(rule.text)) continue
 
-        // 检查项目中是否存在该技术栈的证据
+        // Check whether evidence of this tech stack exists in the project
         const hasEvidence = configFiles.some((cf) => {
-          // 对于 package.json，需要检查其内容是否包含相关依赖
+          // For package.json, verify its content contains relevant dependencies
           const fullPath = resolve(baseDir, cf)
           if (!existsSync(fullPath)) return false
           if (cf === 'package.json') {
@@ -118,10 +119,10 @@ export const noOverconstrain = {
             severity: 'warning',
             file: filePath,
             line: rule.line,
-            message: `规则涉及 "${tech}" 但项目中未检测到相关配置 — 可能是过度约束`,
+            message: `Rule mentions "${tech}" but no related config detected in the project — possible over-constraint`,
             fixable: false,
           })
-          break // 每条规则只报告一次
+          break // Report each rule only once
         }
       }
     }

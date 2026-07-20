@@ -5,7 +5,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { runLint } from '../src/engine.js'
 
 /**
- * 生成一个有 N 条规则的 CLAUDE.md 内容。
+ * Generate a CLAUDE.md file with N rules.
  */
 function generateClaudeMd(ruleCount: number): string {
   const lines = ['# Generated Rules', '']
@@ -16,7 +16,7 @@ function generateClaudeMd(ruleCount: number): string {
 }
 
 /**
- * 生成为一个 SKILL.md 内容。
+ * Generate a SKILL.md file.
  */
 function generateSkillMd(index: number): string {
   return [
@@ -38,10 +38,10 @@ describe('performance', () => {
   beforeAll(() => {
     tmpDir = mkdtempSync(join(tmpdir(), 'ai-lint-perf-'))
 
-    // 创建 CLAUDE.md（50 条规则 — 模拟膨胀场景）
+    // Create CLAUDE.md (50 rules — simulates bloat scenario)
     writeFileSync(join(tmpDir, 'CLAUDE.md'), generateClaudeMd(50))
 
-    // 创建 15 个 Skill 子目录
+    // Create 15 skill subdirectories
     const skillsDir = join(tmpDir, 'skills')
     mkdirSync(skillsDir, { recursive: true })
     for (let i = 1; i <= 15; i++) {
@@ -55,21 +55,21 @@ describe('performance', () => {
     rmSync(tmpDir, { recursive: true, force: true })
   })
 
-  it('扫描 16 个文件 ≤ 1 秒', () => {
+  it('scans 16 files in ≤ 1 second', () => {
     const start = performance.now()
     const result = runLint({ cwd: tmpDir })
     const elapsed = performance.now() - start
 
-    // 验证结果正确：16 个文件（1 CLAUDE.md + 15 SKILL.md）
+    // Verify correct result: 16 files (1 CLAUDE.md + 15 SKILL.md)
     expect(result.files.length).toBe(16)
 
-    // 性能断言：≤ 1 秒
+    // Performance assertion: ≤ 1 second
     expect(elapsed).toBeLessThanOrEqual(1000)
 
     console.log(`  [perf] Scanned 16 files in ${Math.round(elapsed)}ms`)
   })
 
-  it('重复扫描性能稳定', () => {
+  it('repeat scans have stable performance', () => {
     const runs = 5
     const times: number[] = []
 
@@ -81,7 +81,7 @@ describe('performance', () => {
 
     const avg = times.reduce((a, b) => a + b, 0) / runs
 
-    // 平均扫描时间 ≤ 200ms
+    // Average scan time ≤ 200ms
     expect(avg).toBeLessThanOrEqual(2000)
 
     console.log(
@@ -89,8 +89,8 @@ describe('performance', () => {
     )
   })
 
-  it('单文件扫描极快', () => {
-    // 只扫描单个 CLAUDE.md 的简单项目
+  it('single file scan is very fast', () => {
+    // Simple project with only a single CLAUDE.md
     const singleDir = mkdtempSync(join(tmpdir(), 'ai-lint-perf-single-'))
     writeFileSync(
       join(singleDir, 'CLAUDE.md'),
@@ -101,7 +101,7 @@ describe('performance', () => {
     runLint({ cwd: singleDir })
     const elapsed = performance.now() - start
 
-    // 单文件 ≤ 50ms
+    // Single file ≤ 50ms
     expect(elapsed).toBeLessThanOrEqual(200)
 
     rmSync(singleDir, { recursive: true, force: true })

@@ -10,7 +10,7 @@ describe('integration: full lint pipeline', () => {
   beforeAll(() => {
     tmpDir = mkdtempSync(join(tmpdir(), 'ai-lint-integration-'))
 
-    // 创建 CLAUDE.md（含重复和冗余）
+    // Create CLAUDE.md (with duplicates and verbose text)
     writeFileSync(join(tmpDir, 'CLAUDE.md'), [
       '# Project Rules',
       '',
@@ -29,7 +29,7 @@ describe('integration: full lint pipeline', () => {
       '- Config file: ./nonexistent-config.json',
     ].join('\n'))
 
-    // 创建 SKILL.md 子目录（有 frontmatter）
+    // Create SKILL.md subdirectory (with frontmatter)
     mkdirSync(join(tmpDir, 'skills', 'image-gen'), { recursive: true })
     writeFileSync(join(tmpDir, 'skills', 'image-gen', 'SKILL.md'), [
       '---',
@@ -41,7 +41,7 @@ describe('integration: full lint pipeline', () => {
       '- Always include alt text',
     ].join('\n'))
 
-    // 创建 SKILL.md（无 frontmatter）
+    // Create SKILL.md (without frontmatter)
     mkdirSync(join(tmpDir, 'skills', 'no-meta-skill'), { recursive: true })
     writeFileSync(join(tmpDir, 'skills', 'no-meta-skill', 'SKILL.md'), [
       '# No Meta Skill',
@@ -50,7 +50,7 @@ describe('integration: full lint pipeline', () => {
       '- It should trigger no-missing-frontmatter',
     ].join('\n'))
 
-    // 创建 AGENTS.md（冗余描述）
+    // Create AGENTS.md (verbose descriptions)
     writeFileSync(join(tmpDir, 'AGENTS.md'), [
       '# Agent Rules',
       '',
@@ -64,22 +64,22 @@ describe('integration: full lint pipeline', () => {
     rmSync(tmpDir, { recursive: true, force: true })
   })
 
-  it('扫描混合项目，发现所有文件和问题', () => {
+  it('scans mixed project, discovers all files and issues', () => {
     const result = runLint({ cwd: tmpDir })
 
-    // 应该发现 4 个文件
+    // should discover 4 files
     expect(result.files.length).toBe(4)
 
-    // 至少有一个 error（no-missing-frontmatter）
+    // at least one error (no-missing-frontmatter)
     expect(result.errors).toBeGreaterThanOrEqual(1)
-    // 至少有一些 warnings（no-verbose, no-global-path-rule 等）
+    // at least some warnings (no-verbose, no-global-path-rule, etc.)
     expect(result.errors + result.warnings).toBeGreaterThanOrEqual(3)
 
-    // 至少有一个 fixable 问题
+    // at least one fixable issue
     expect(result.fixable).toBeGreaterThanOrEqual(1)
   })
 
-  it('CLAUDE.md 检测到重复规则', () => {
+  it('CLAUDE.md detects duplicate rules', () => {
     const result = runLint({ cwd: tmpDir })
     const claudeFile = result.files.find((f) => f.file.name === 'CLAUDE.md')
 
@@ -88,7 +88,7 @@ describe('integration: full lint pipeline', () => {
     expect(dupIssues.length).toBeGreaterThan(0)
   })
 
-  it('CLAUDE.md 检测到冗余表述', () => {
+  it('CLAUDE.md detects verbose expressions', () => {
     const result = runLint({ cwd: tmpDir })
     const claudeFile = result.files.find((f) => f.file.name === 'CLAUDE.md')
 
@@ -97,7 +97,7 @@ describe('integration: full lint pipeline', () => {
     expect(verboseIssues.length).toBeGreaterThan(0)
   })
 
-  it('SKILL.md 无 frontmatter 被检测到', () => {
+  it('SKILL.md without frontmatter is detected', () => {
     const result = runLint({ cwd: tmpDir })
     const noMetaFile = result.files.find((f) =>
       f.file.path.includes('no-meta-skill'),
@@ -109,17 +109,17 @@ describe('integration: full lint pipeline', () => {
     expect(fmIssues[0].severity).toBe('error')
   })
 
-  it('健康分计算正确', () => {
+  it('health score calculation is correct', () => {
     const result = runLint({ cwd: tmpDir })
 
-    // 有效 frontmatter 的 skill 应该 100 分
+    // skill with valid frontmatter should score 100
     const healthySkill = result.files.find((f) =>
       f.file.path.includes('image-gen'),
     )
     expect(healthySkill).toBeDefined()
     expect(healthySkill!.issues.length).toBe(0)
 
-    // 有问题的文件应该低于 100
+    // problematic files should score below 100
     const badSkill = result.files.find((f) =>
       f.file.path.includes('no-meta-skill'),
     )
@@ -130,14 +130,14 @@ describe('integration: full lint pipeline', () => {
     // the render module handles health calculation independently
   })
 
-  it('fix dry-run 识别可修复问题', () => {
+  it('fix dry-run identifies fixable issues', () => {
     const { result, fixed } = runFix({ cwd: tmpDir, fix: true, dryRun: true })
 
-    // 至少识别出可修复的重复和冗余问题
+    // at least identifies fixable duplicate and verbose issues
     expect(fixed).toBeGreaterThanOrEqual(1)
   })
 
-  it('CLAUDE.md 健康分不为满分', () => {
+  it('CLAUDE.md health score is not perfect', () => {
     const result = runLint({ cwd: tmpDir })
     const claudeFile = result.files.find((f) => f.file.name === 'CLAUDE.md')
 
@@ -145,14 +145,14 @@ describe('integration: full lint pipeline', () => {
     expect(claudeFile!.issues.length).toBeGreaterThan(0)
   })
 
-  it('问题按严重度排序', () => {
+  it('issues are sorted by severity', () => {
     const result = runLint({ cwd: tmpDir })
     const noMetaFile = result.files.find((f) =>
       f.file.path.includes('no-meta-skill'),
     )
 
     expect(noMetaFile).toBeDefined()
-    // errors 应排在 warnings 前面
+    // errors should come before warnings
     const firstErrorIdx = noMetaFile!.issues.findIndex((i) => i.severity === 'error')
     const firstWarningIdx = noMetaFile!.issues.findIndex((i) => i.severity === 'warning')
     if (firstErrorIdx >= 0 && firstWarningIdx >= 0) {
@@ -172,7 +172,7 @@ describe('integration: empty project', () => {
     rmSync(emptyDir, { recursive: true, force: true })
   })
 
-  it('空项目不报错', () => {
+  it('empty project produces no errors', () => {
     const result = runLint({ cwd: emptyDir })
 
     expect(result.files).toHaveLength(0)

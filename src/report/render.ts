@@ -2,13 +2,13 @@ import chalk from 'chalk'
 import type { FoundFile } from '../discovery/find-files.js'
 import type { LintIssue, Severity } from '../types.js'
 
-/** 每个文件的检测结果汇总 */
+/** Summary of detection results per file */
 export interface FileResult {
   file: FoundFile
   issues: LintIssue[]
 }
 
-/** 整体检测结果 */
+/** Overall detection results */
 export interface LintResult {
   files: FileResult[]
   errors: number
@@ -27,7 +27,7 @@ const SEVERITY_COLOR: Record<Severity, (s: string) => string> = {
 }
 
 /**
- * 渲染终端输出（ESLint 风格）。
+ * Render terminal output (ESLint-style).
  */
 export function render(result: LintResult, _rootDir: string): string {
   if (result.files.length === 0) {
@@ -41,7 +41,7 @@ export function render(result: LintResult, _rootDir: string): string {
     const healthColor = health >= 90 ? chalk.green : health >= 60 ? chalk.yellow : chalk.red
     const healthIcon = health >= 90 ? '✅' : health >= 60 ? '⚠️' : '❌'
 
-    // 文件头
+    // File header
     const displayName = file.type === 'skill'
       ? file.path.split('/').slice(-2).join('/')
       : file.name
@@ -54,7 +54,7 @@ export function render(result: LintResult, _rootDir: string): string {
       continue
     }
 
-    // 按严重度排序：error 优先
+    // Sort by severity: error first
     const sorted = [...issues].sort((a, b) => {
       if (a.severity === 'error' && b.severity !== 'error') return -1
       if (a.severity !== 'error' && b.severity === 'error') return 1
@@ -76,7 +76,7 @@ export function render(result: LintResult, _rootDir: string): string {
     lines.push('')
   }
 
-  // 摘要
+  // Summary
   const summaryParts: string[] = []
   if (result.errors > 0) summaryParts.push(chalk.red(`${result.errors} error${result.errors > 1 ? 's' : ''}`))
   if (result.warnings > 0) summaryParts.push(chalk.yellow(`${result.warnings} warning${result.warnings > 1 ? 's' : ''}`))
@@ -94,7 +94,7 @@ export function render(result: LintResult, _rootDir: string): string {
 }
 
 /**
- * 渲染 JSON 输出（供工具链消费）。
+ * Render JSON output (for toolchain consumption).
  */
 export function renderJson(result: LintResult): string {
   const output = result.files.map(({ file, issues }) => ({
@@ -117,11 +117,11 @@ export function renderJson(result: LintResult): string {
 }
 
 /**
- * 计算文件健康分。
- * - 基础分 100
- * - 每个 error -15
- * - 每个 warning -5
- * - 最低 0
+ * Calculate file health score.
+ * - Base score 100
+ * - Each error: -15
+ * - Each warning: -5
+ * - Minimum 0
  */
 function calcHealth(issues: LintIssue[]): number {
   let score = 100
@@ -132,7 +132,7 @@ function calcHealth(issues: LintIssue[]): number {
 }
 
 /**
- * 汇总检测结果。
+ * Summarize detection results.
  */
 export function summarize(fileResults: FileResult[]): LintResult {
   let errors = 0

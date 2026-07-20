@@ -1,10 +1,10 @@
 import type { LintIssue } from '../types.js'
 import { parseRules } from '../parser/markdown.js'
 
-/** 默认规则数上限 */
+/** Default max rule count */
 const DEFAULT_MAX_RULES = 15
 
-/** 估算每条规则的平均 token 数 */
+/** Estimated average tokens per rule */
 const AVG_RULE_TOKENS = 8
 
 export const maxLength = {
@@ -29,7 +29,7 @@ export const maxLength = {
         severity: 'warning',
         file: filePath,
         line: rules[maxRules]?.line,
-        message: `规则总数 ${rules.length} 超过阈值 ${maxRules}（超出 ${excess} 条），AI 遵守率存在下降风险`,
+        message: `Rule count ${rules.length} exceeds threshold ${maxRules} (${excess} over), AI compliance rate at risk of declining`,
         tokenWaste: estimatedTokens,
         fixable: false,
       })

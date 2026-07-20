@@ -21,7 +21,7 @@ const fixture = (name: string) =>
 // ============================================================
 
 describe('no-duplicate', () => {
-  it('检测字面重复的规则', () => {
+  it('detects literal duplicate rules', () => {
     const content = fixture('duplicate-claude.md')
     const issues = noDuplicate.check(content, 'CLAUDE.md')
 
@@ -31,7 +31,7 @@ describe('no-duplicate', () => {
     expect(messages.some((m) => m.includes('TypeScript strict mode'))).toBe(true)
     expect(messages.some((m) => m.includes('Run npm test'))).toBe(true)
 
-    // 验证严重级别
+    // verify severity level
     for (const issue of issues) {
       expect(issue.severity).toBe('error')
       expect(issue.ruleId).toBe('no-duplicate')
@@ -39,14 +39,14 @@ describe('no-duplicate', () => {
     }
   })
 
-  it('健康配置不产生重复报告', () => {
+  it('healthy config produces no duplicate reports', () => {
     const content = fixture('healthy-claude.md')
     const issues = noDuplicate.check(content, 'CLAUDE.md')
 
     expect(issues).toHaveLength(0)
   })
 
-  it('估算 token 浪费量', () => {
+  it('estimates token waste', () => {
     const content = fixture('duplicate-claude.md')
     const issues = noDuplicate.check(content, 'CLAUDE.md')
 
@@ -56,7 +56,7 @@ describe('no-duplicate', () => {
     }
   })
 
-  it('fix 移除重复行（保留第一次出现）', () => {
+  it('fix removes duplicate line (keeps first occurrence)', () => {
     const content = '- Rule one\n- Rule two\n- Rule one\n- Rule three\n'
     const issues = noDuplicate.check(content, 'test.md')
     expect(issues).toHaveLength(1)
@@ -65,12 +65,12 @@ describe('no-duplicate', () => {
     expect(fixed).toBe('- Rule one\n- Rule two\n- Rule three\n')
   })
 
-  it('空内容不报错', () => {
+  it('empty content produces no errors', () => {
     const issues = noDuplicate.check('', 'empty.md')
     expect(issues).toHaveLength(0)
   })
 
-  it('处理大小写不敏感的重复', () => {
+  it('handles case-insensitive duplicates', () => {
     const content = '- USE TYPESCRIPT\n- Use TypeScript\n'
     const issues = noDuplicate.check(content, 'test.md')
     expect(issues.length).toBe(1)
@@ -82,7 +82,7 @@ describe('no-duplicate', () => {
 // ============================================================
 
 describe('no-verbose', () => {
-  it('检测中文冗余表述', () => {
+  it('detects Chinese verbose expressions', () => {
     const content = [
       '- 请务必确保一定在提交前运行所有测试',
     ].join('\n')
@@ -95,7 +95,7 @@ describe('no-verbose', () => {
     expect(issues[0].tokenWaste).toBeGreaterThan(0)
   })
 
-  it('检测英文冗余表述', () => {
+  it('detects English verbose expressions', () => {
     const cases = [
       '- Please be absolutely sure to always run tests before committing',
       '- It is essential that you follow the style guide',
@@ -111,7 +111,7 @@ describe('no-verbose', () => {
     }
   })
 
-  it('检测填充词', () => {
+  it('detects filler words', () => {
     const cases = [
       '- I want you to use TypeScript strict mode',
       '- Remember that you should always format before committing',
@@ -124,7 +124,7 @@ describe('no-verbose', () => {
     }
   })
 
-  it('简洁规则不产生报告', () => {
+  it('concise rules produce no reports', () => {
     const content = [
       '- Use TypeScript strict mode',
       '- Run tests before committing',
@@ -135,20 +135,20 @@ describe('no-verbose', () => {
     expect(issues).toHaveLength(0)
   })
 
-  it('fix 替换冗余表述', () => {
+  it('fix replaces verbose expressions', () => {
     const content = '- Please be absolutely sure to always run tests\n'
     const issues = noVerbose.check(content, 'test.md')
     expect(issues.length).toBeGreaterThan(0)
 
     const fixed = noVerbose.fix(content, issues[0])
     expect(fixed).not.toBe(content)
-    // 修复后不应再检测到问题
+    // after fix, should not detect issues again
     const recheck = noVerbose.check(fixed, 'test.md')
     expect(recheck).toHaveLength(0)
   })
 
-  it('过滤微小优化（节省 < 3 tokens）', () => {
-    // "due to" → 太短，不应该触发
+  it('filters out trivial optimizations (saves < 3 tokens)', () => {
+    // "due to" → too short, should not trigger
     const content = '- due to\n'
     const issues = noVerbose.check(content, 'test.md')
     expect(issues).toHaveLength(0)
@@ -160,15 +160,15 @@ describe('no-verbose', () => {
 // ============================================================
 
 describe('max-length', () => {
-  it('规则数低于阈值时不报告', () => {
+  it('does not report when rule count is below threshold', () => {
     const content = fixture('healthy-claude.md')
     const issues = maxLength.check(content, 'CLAUDE.md', 20)
 
     expect(issues).toHaveLength(0)
   })
 
-  it('规则数超过阈值时报告', () => {
-    // 生成超过 5 条规则的内容（每条 ≥ 8 字符）
+  it('reports when rule count exceeds threshold', () => {
+    // generate content with more than 5 rules (each ≥ 8 chars)
     const rules = Array.from({ length: 8 }, (_, i) => `- Rule number ${i + 1} here`)
     const content = rules.join('\n')
 
@@ -181,7 +181,7 @@ describe('max-length', () => {
     expect(issues[0].fixable).toBe(false)
   })
 
-  it('消息中包含超出的条数', () => {
+  it('message includes the exceeded count', () => {
     const rules = Array.from({ length: 12 }, (_, i) => `- Rule number ${i + 1} here`)
     const content = rules.join('\n')
 
@@ -190,18 +190,18 @@ describe('max-length', () => {
     expect(issues[0].message).toContain('5')
   })
 
-  it('使用默认阈值', () => {
+  it('uses default threshold', () => {
     const issues = maxLength.check('', 'test.md')
     expect(issues).toHaveLength(0)
   })
 
-  it('报告行号指向第一条超限规则', () => {
+  it('reports line number pointing to first exceeding rule', () => {
     const rules = Array.from({ length: 12 }, (_, i) => `- Rule number ${i + 1} here`)
     const content = rules.join('\n')
 
     const issues = maxLength.check(content, 'test.md', 5)
 
-    // 第 6 条规则的行号
+    // line number of the 6th rule
     expect(issues[0].line).toBe(6)
   })
 })
@@ -211,7 +211,7 @@ describe('max-length', () => {
 // ============================================================
 
 describe('no-stale-reference', () => {
-  it('检测不存在的文件引用', () => {
+  it('detects non-existent file references', () => {
     const content = '- Reference to ./nonexistent/file.ts for config\n'
     const issues = noStaleReference.check(content, 'test/CLAUDE.md')
 
@@ -221,7 +221,7 @@ describe('no-stale-reference', () => {
     expect(issues[0].fixable).toBe(false)
   })
 
-  it('存在的文件引用不报告', () => {
+  it('existing file references are not reported', () => {
     const content = '- Reference to ./healthy-claude.md for examples\n'
     const issues = noStaleReference.check(
       content,
@@ -233,7 +233,7 @@ describe('no-stale-reference', () => {
     }
   })
 
-  it('不存在的相对路径报告带行号', () => {
+  it('non-existent relative path reports with line number', () => {
     const content = '- Use config from ./missing-config.json\n'
     const issues = noStaleReference.check(content, '/tmp/test.md')
 
@@ -241,7 +241,7 @@ describe('no-stale-reference', () => {
     expect(issues[0].line).toBe(1)
   })
 
-  it('跳过版本号（不当作文件路径）', () => {
+  it('skips version numbers (not treated as file paths)', () => {
     const content = '- Use version v1.0.0 for the build\n'
     const issues = noStaleReference.check(content, '/tmp/test.md')
 
@@ -251,7 +251,7 @@ describe('no-stale-reference', () => {
     expect(pathIssues).toHaveLength(0)
   })
 
-  it('普通段落中的路径引用也检测', () => {
+  it('also detects path references in plain paragraphs', () => {
     const content = 'The configuration is stored in ./nowhere-config.json on disk.\n'
     const issues = noStaleReference.check(content, '/tmp/test.md')
 
@@ -265,7 +265,7 @@ describe('no-stale-reference', () => {
 // ============================================================
 
 describe('no-global-path-rule', () => {
-  it('检测作用于特定目录的全局规则', () => {
+  it('detects global rules scoped to a specific directory', () => {
     const content = '- 在 src/components 目录中的所有组件必须添加单元测试\n'
     const issues = noGlobalPathRule.check(content, 'CLAUDE.md')
 
@@ -274,7 +274,7 @@ describe('no-global-path-rule', () => {
     expect(issues[0].fixable).toBe(false)
   })
 
-  it('检测英文的路径限定规则', () => {
+  it('detects English path-scoped rules', () => {
     const cases = [
       '- For the src/modules directory, all exports must be explicit',
       '- Only in the lib folder should you use dynamic imports',
@@ -288,7 +288,7 @@ describe('no-global-path-rule', () => {
     }
   })
 
-  it('检测中文的路径限定表述', () => {
+  it('detects Chinese path-scoped expressions', () => {
     const cases = [
       '- 针对 utils 目录下的所有文件使用具名导出',
       '- 适用于 components 模块的组件必须包含 PropTypes',
@@ -300,7 +300,7 @@ describe('no-global-path-rule', () => {
     }
   })
 
-  it('通用规则不报告', () => {
+  it('generic rules are not reported', () => {
     const content = '- Use TypeScript strict mode\n- Run tests before committing\n'
     const issues = noGlobalPathRule.check(content, 'CLAUDE.md')
 
@@ -313,7 +313,7 @@ describe('no-global-path-rule', () => {
 // ============================================================
 
 describe('no-missing-frontmatter', () => {
-  it('检测缺失 frontmatter 的 SKILL.md', () => {
+  it('detects SKILL.md missing frontmatter', () => {
     const content = '# My Skill\n\nSome instructions here.\n'
     const issues = noMissingFrontmatter.check(content, 'skills/my-skill/SKILL.md')
 
@@ -323,7 +323,7 @@ describe('no-missing-frontmatter', () => {
     expect(issues[0].fixable).toBe(true)
   })
 
-  it('检测缺失 description 的 frontmatter', () => {
+  it('detects frontmatter missing description', () => {
     const content = '---\nname: my-skill\n---\n# My Skill\n'
     const issues = noMissingFrontmatter.check(content, 'skills/my-skill/SKILL.md')
 
@@ -331,14 +331,14 @@ describe('no-missing-frontmatter', () => {
     expect(issues[0].message).toContain('description')
   })
 
-  it('完整 frontmatter 不报告', () => {
+  it('complete frontmatter is not reported', () => {
     const content = fixture('skills/skill-a/SKILL.md')
     const issues = noMissingFrontmatter.check(content, 'skills/skill-a/SKILL.md')
 
     expect(issues).toHaveLength(0)
   })
 
-  it('fix 为无 frontmatter 文件添加模板', () => {
+  it('fix adds template for file without frontmatter', () => {
     const content = '# My Skill\n\nSome instructions.\n'
     const issue = noMissingFrontmatter.check(content, 'skills/my-skill/SKILL.md')[0]
 
@@ -349,12 +349,12 @@ describe('no-missing-frontmatter', () => {
     expect(fixed).toContain('description:')
     expect(fixed).toContain('# My Skill')
 
-    // 修复后不应再检测到问题
+    // after fix, should not detect issues again
     const recheck = noMissingFrontmatter.check(fixed, 'skills/my-skill/SKILL.md')
     expect(recheck).toHaveLength(0)
   })
 
-  it('fix 为缺失 description 的前补字段', () => {
+  it('fix prepends missing description field', () => {
     const content = '---\nname: my-skill\n---\n# Content\n'
     const issue = noMissingFrontmatter.check(content, 'skills/my-skill/SKILL.md')[0]
 
@@ -365,7 +365,7 @@ describe('no-missing-frontmatter', () => {
     expect(recheck).toHaveLength(0)
   })
 
-  it('只对 SKILL.md 生效', () => {
+  it('only applies to SKILL.md', () => {
     expect(noMissingFrontmatter.files).toEqual(['SKILL.md'])
   })
 })
@@ -375,7 +375,7 @@ describe('no-missing-frontmatter', () => {
 // ============================================================
 
 describe('no-semantic-duplicate', () => {
-  it('检测语义相似但措辞不同的规则', () => {
+  it('detects semantically similar but differently worded rules', () => {
     const content = [
       '- Always use TypeScript strict mode for new files',
       '- Use TypeScript strict mode for all new files always',
@@ -388,7 +388,7 @@ describe('no-semantic-duplicate', () => {
     expect(issues[0].fixable).toBe(false)
   })
 
-  it('完全相同的规则不报告（留给 no-duplicate）', () => {
+  it('identical rules are not reported (left to no-duplicate)', () => {
     const content = [
       '- Use TypeScript strict mode',
       '- Use TypeScript strict mode',
@@ -398,7 +398,7 @@ describe('no-semantic-duplicate', () => {
     expect(issues).toHaveLength(0)
   })
 
-  it('语义不相关的规则不报告', () => {
+  it('semantically unrelated rules are not reported', () => {
     const content = [
       '- Use TypeScript strict mode',
       '- Run tests before committing',
@@ -409,7 +409,7 @@ describe('no-semantic-duplicate', () => {
     expect(issues).toHaveLength(0)
   })
 
-  it('单条规则不报错', () => {
+  it('single rule does not error', () => {
     const issues = noSemanticDuplicate.check('- One rule\n', 'test.md')
     expect(issues).toHaveLength(0)
   })
@@ -420,7 +420,7 @@ describe('no-semantic-duplicate', () => {
 // ============================================================
 
 describe('no-conflict', () => {
-  it('检测缩进方式冲突 (tabs vs spaces)', () => {
+  it('detects indentation conflict (tabs vs spaces)', () => {
     const content = [
       '- Use tabs for indentation',
       '- Use spaces for indentation',
@@ -433,7 +433,7 @@ describe('no-conflict', () => {
     expect(issues[0].severity).toBe('error')
   })
 
-  it('检测分号使用冲突', () => {
+  it('detects semicolon usage conflict', () => {
     const content = [
       '- Always use semicolons at end of statements',
       '- Do not use semicolons in your code',
@@ -443,7 +443,7 @@ describe('no-conflict', () => {
     expect(issues.length).toBeGreaterThan(0)
   })
 
-  it('检测引号风格冲突', () => {
+  it('detects quote style conflict', () => {
     const content = [
       '- Prefer single quotes for strings',
       '- Use double quotes for all strings',
@@ -453,7 +453,7 @@ describe('no-conflict', () => {
     expect(issues.length).toBeGreaterThan(0)
   })
 
-  it('无冲突的规则不报告', () => {
+  it('non-conflicting rules are not reported', () => {
     const content = [
       '- Use TypeScript strict mode',
       '- Run tests before committing',
@@ -464,7 +464,7 @@ describe('no-conflict', () => {
     expect(issues).toHaveLength(0)
   })
 
-  it('跨文件冲突检测', () => {
+  it('cross-file conflict detection', () => {
     const fileA = {
       content: '- Use tabs for indentation\n- Always use semicolons\n',
       path: 'project/CLAUDE.md',
@@ -485,8 +485,8 @@ describe('no-conflict', () => {
 // ============================================================
 
 describe('no-overconstrain', () => {
-  it('检测不适用当前项目的技术栈约束', () => {
-    // 引用 GraphQL 但当前目录没有 package.json/graphql 配置文件
+  it('detects tech stack constraints not applicable to current project', () => {
+    // references GraphQL but current directory has no package.json/graphql config files
     const content = '- All GraphQL queries must include error handling with Apollo Client\n'
     const issues = noOverconstrain.check(content, '/tmp/nonexistent-dir/CLAUDE.md')
 
@@ -496,7 +496,7 @@ describe('no-overconstrain', () => {
     expect(issues[0].fixable).toBe(false)
   })
 
-  it('检测多种技术栈的过度约束', () => {
+  it('detects over-constraining for multiple tech stacks', () => {
     const content = [
       '- Use React hooks for all state management',
       '- Configure Docker containers for local development',
@@ -504,11 +504,11 @@ describe('no-overconstrain', () => {
 
     const issues = noOverconstrain.check(content, '/tmp/nonexistent-dir/CLAUDE.md')
 
-    // 两个技术栈都不在该目录中，应该报告两次
+    // both tech stacks are not in the directory, should report twice
     expect(issues.length).toBeGreaterThanOrEqual(2)
   })
 
-  it('通用规则不报告过度约束', () => {
+  it('generic rules are not reported as over-constraining', () => {
     const content = '- Use TypeScript strict mode\n- Format with Biome\n- Run tests regularly\n'
     const issues = noOverconstrain.check(content, '/tmp/test.md')
 
@@ -521,7 +521,7 @@ describe('no-overconstrain', () => {
 // ============================================================
 
 describe('no-null-effect', () => {
-  it('检测中文空洞表述', () => {
+  it('detects Chinese vacuous expressions', () => {
     const cases = [
       '- 确保代码质量达到标准',
       '- 写出干净整洁的代码',
@@ -536,7 +536,7 @@ describe('no-null-effect', () => {
     }
   })
 
-  it('检测英文空洞表述', () => {
+  it('detects English vacuous expressions', () => {
     const cases = [
       '- Make sure the code is high quality',
       '- Write clean and beautiful code',
@@ -551,7 +551,7 @@ describe('no-null-effect', () => {
     }
   })
 
-  it('具体可执行的规则不报告', () => {
+  it('specific actionable rules are not reported', () => {
     const content = [
       '- Use TypeScript strict mode',
       '- Run npm test before committing',
@@ -562,8 +562,8 @@ describe('no-null-effect', () => {
     expect(issues).toHaveLength(0)
   })
 
-  it('包含具体操作词的不报告（即使有小空洞）', () => {
-    // "注意检查" 虽然以"注意"开头但包含"检查"（具体操作）
+  it('rules containing specific action words are not reported (even with minor vacuity)', () => {
+    // "注意检查" starts with "注意" but contains "检查" (specific action)
     const content = '- 注意检查代码格式和类型安全\n'
     const issues = noNullEffect.check(content, 'test.md')
 
@@ -577,7 +577,7 @@ describe('no-null-effect', () => {
 // ============================================================
 
 describe('no-skill-bloat', () => {
-  it('Skill 规则数超限报告', () => {
+  it('reports when skill rule count exceeds limit', () => {
     const rules = Array.from({ length: 25 }, (_, i) => `- Rule number ${i + 1} for testing\n`)
     const content = ['---', 'name: test', 'description: test', '---', '# Skill', ...rules].join('\n')
 
@@ -588,24 +588,24 @@ describe('no-skill-bloat', () => {
     expect(issues[0].message).toContain('25')
   })
 
-  it('Skill 行数超限报告', () => {
+  it('reports when skill line count exceeds limit', () => {
     const lines = Array.from({ length: 200 }, (_, i) => `line ${i + 1}`)
     const content = lines.join('\n')
 
     const issues = noSkillBloat.check(content, 'skills/test/SKILL.md', 100, 150)
 
-    const lineIssues = issues.filter((i) => i.message.includes('行'))
+    const lineIssues = issues.filter((i) => i.message.includes('lines'))
     expect(lineIssues.length).toBeGreaterThan(0)
   })
 
-  it('正常大小的 Skill 不报告', () => {
+  it('normal-sized skill is not reported', () => {
     const content = ['---', 'name: normal', 'description: A normal skill', '---', '# Normal', '- Rule one', '- Rule two'].join('\n')
 
     const issues = noSkillBloat.check(content, 'skills/normal/SKILL.md')
     expect(issues).toHaveLength(0)
   })
 
-  it('只对 SKILL.md 生效', () => {
+  it('only applies to SKILL.md', () => {
     expect(noSkillBloat.files).toEqual(['SKILL.md'])
   })
 })

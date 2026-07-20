@@ -1,17 +1,17 @@
 /**
- * 通用文本简化映射表。
+ * General-purpose text simplification map.
  *
- * 每条：冗长表述 → 简洁替代
+ * Each entry: verbose expression → concise replacement
  */
 const SIMPLIFICATIONS: Array<{ from: RegExp; to: string }> = [
-  // === 中文简化 ===
+  // === Chinese simplification ===
   { from: /请务必确保一定/g, to: '请' },
   { from: /请务必?一定?要?确保/g, to: '确保' },
   { from: /一定必须要/g, to: '必须' },
   { from: /所有的一?切的?/g, to: '所有' },
   { from: /无论在任何情况下/g, to: '任何情况' },
 
-  // === 英文简化 ===
+  // === English simplification ===
   { from: /please be absolutely sure to/gi, to: 'please ' },
   { from: /please make absolutely certain to/gi, to: 'please ' },
   { from: /always make sure to/gi, to: 'always ' },
@@ -28,7 +28,7 @@ const SIMPLIFICATIONS: Array<{ from: RegExp; to: string }> = [
   { from: /(don'?t forget to|do not forget to)\s*/gi, to: '' },
   { from: /in (order )?to be able to/gi, to: 'to' },
 
-  // === 通用优化 ===
+  // === General optimization ===
   { from: /(?:is |are |be )?(able to|capable of)\s*/gi, to: 'can ' },
   { from: /make (?:a |an )?use of/gi, to: 'use' },
   { from: /take (?:a )?look at/gi, to: 'check' },
@@ -36,15 +36,15 @@ const SIMPLIFICATIONS: Array<{ from: RegExp; to: string }> = [
 ]
 
 /**
- * 简化文本中的冗余表述。
+ * Simplifies redundant expressions in text.
  *
- * 按顺序应用所有简化规则，最终 trim 并清理多余空格。
+ * Applies all simplification rules in order, then trims and cleans up excess whitespace.
  *
- * @param text - 原始文本
- * @returns 简化后的文本
+ * @param text - Original text
+ * @returns Simplified text
  */
 export function simplifyText(text: string): string {
-  // 先合并多余空格，统一为单空格（避免空格数量影响正则匹配）
+  // First collapse excess whitespace to single spaces (to avoid space count affecting regex matching)
   let result = text.replace(/\s{2,}/g, ' ').trim()
 
   for (const { from, to } of SIMPLIFICATIONS) {
@@ -52,10 +52,10 @@ export function simplifyText(text: string): string {
     result = result.replace(from, to)
   }
 
-  // 再次清理：合并多余空格，去除首尾空白
+  // Clean up again: collapse excess whitespace, strip leading/trailing whitespace
   result = result.replace(/\s{2,}/g, ' ').trim()
 
-  // 确保首字母大写（英文）— 跳过列表标记符号
+  // Ensure first letter is capitalized (English) — skip list markers
   const firstAlpha = result.search(/[a-zA-Z]/)
   if (firstAlpha >= 0 && /[a-z]/.test(result[firstAlpha])) {
     result = result.slice(0, firstAlpha)
@@ -67,7 +67,7 @@ export function simplifyText(text: string): string {
 }
 
 /**
- * 估算简化节省的 token 数。
+ * Estimate the number of tokens saved by simplification.
  */
 export function estimateSavings(original: string, simplified: string): number {
   return estimateTokens(original) - estimateTokens(simplified)

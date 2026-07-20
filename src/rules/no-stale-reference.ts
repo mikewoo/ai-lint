@@ -4,13 +4,13 @@ import type { LintIssue } from '../types.js'
 import { parseRules } from '../parser/markdown.js'
 
 /**
- * 匹配文件路径引用的模式：
- * - 相对路径：`./src/foo.ts`, `../config.json`, `../../dir/file`
- * - 裸文件名：`tsconfig.json`, `package.json`（需有扩展名）
+ * Patterns for matching file path references:
+ * - Relative paths: `./src/foo.ts`, `../config.json`, `../../dir/file`
+ * - Bare filenames: `tsconfig.json`, `package.json` (must have an extension)
  */
 const FILE_PATH_RE = /`?((?:\.{1,2}\/)+[\w./-]+\.[\w]+)`?/g
 
-/** 匹配引用式路径：`/path/to/file.ext` 或 `~/path/file.ext` */
+/** Match absolute-style paths: `/path/to/file.ext` or `~/path/file.ext` */
 const ABS_PATH_RE = /`?(\/[a-zA-Z0-9._/-]+\.[\w]+)`?/g
 
 export const noStaleReference = {
@@ -34,21 +34,21 @@ export const noStaleReference = {
             severity: 'warning',
             file: filePath,
             line: rule.line,
-            message: `引用的路径不存在: "${ref}"`,
+            message: `Referenced path does not exist: "${ref}"`,
             fixable: false,
           })
         }
       }
     }
 
-    // 也扫描非规则文本中的路径引用（如普通段落）
+    // Also scan non-rule text for path references (e.g. plain paragraphs)
     for (const ref of extractPaths(content)) {
-      // 避免重复报告
+      // Avoid duplicate reports
       if (issues.some((i) => i.message.includes(ref))) continue
 
       const fullPath = resolve(baseDir, ref)
       if (!existsSync(fullPath)) {
-        // 找到引用所在行
+        // Find the line where the reference appears
         const lines = content.split('\n')
         let line: number | undefined
         for (let i = 0; i < lines.length; i++) {
@@ -63,7 +63,7 @@ export const noStaleReference = {
           severity: 'warning',
           file: filePath,
           line,
-          message: `引用的路径不存在: "${ref}"`,
+          message: `Referenced path does not exist: "${ref}"`,
           fixable: false,
         })
       }
@@ -74,14 +74,14 @@ export const noStaleReference = {
 }
 
 /**
- * 从文本中提取所有文件路径引用。
- * 只提取相对路径和包含扩展名的路径（排除 URL 和包名）。
+ * Extract all file path references from text.
+ * Only extracts relative paths and paths with extensions (excludes URLs and package names).
  */
 function extractPaths(text: string): string[] {
   const paths: string[] = []
   const seen = new Set<string>()
 
-  // 先提取相对路径
+  // Extract relative paths first
   const relativePaths: { path: string; start: number; end: number }[] = []
 
   FILE_PATH_RE.lastIndex = 0
@@ -96,12 +96,12 @@ function extractPaths(text: string): string[] {
 
   paths.push(...relativePaths.map((r) => r.path))
 
-  // 提取绝对路径，但跳过已被相对路径覆盖的区域
+  // Extract absolute paths, but skip regions already covered by relative path matches
   ABS_PATH_RE.lastIndex = 0
   for (const match of text.matchAll(ABS_PATH_RE)) {
     const p = match[1]
     const absStart = match.index!
-    // 跳过已被相对路径匹配覆盖的位置（如 ./healthy-claude.md 中被误提取的 /healthy-claude.md）
+    // Skip positions already covered by relative path matches (e.g. /healthy-claude.md spuriously extracted from ./healthy-claude.md)
     const overlapped = relativePaths.some(
       (r) => absStart >= r.start && absStart < r.end,
     )

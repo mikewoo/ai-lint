@@ -2,30 +2,30 @@ import type { LintIssue } from '../types.js'
 import { parseRules } from '../parser/markdown.js'
 
 /**
- * 智能去重：当发现重复规则时，保留内容更完整的版本，删除较短的版本。
+ * Smart deduplication: when duplicate rules are found, keep the more complete version and delete the shorter one.
  *
- * 对比简单的行删除，这个 fixer 会：
- * 1. 比较两条重复规则的长度
- * 2. 如果某条是另一条的子串，保留更长的
- * 3. 删除较短的版本
+ * Compared to simple line deletion, this fixer will:
+ * 1. Compare the length of two duplicate rules
+ * 2. If one is a substring of the other, keep the longer one
+ * 3. Delete the shorter version
  *
  * @example
- *   输入:
+ *   Input:
  *     - Use TypeScript strict mode
  *     - Use TypeScript strict mode, enable noUncheckedIndexedAccess
  *
- *   输出:
+ *   Output:
  *     - Use TypeScript strict mode, enable noUncheckedIndexedAccess
  */
 export function deduplicateContent(content: string, issue: LintIssue): string {
   const lines = content.split('\n')
   const rules = parseRules(content)
 
-  // 找出与 issue 相关的所有重复项
+  // Find all duplicates related to the issue
   const targetLine = issue.line!
   const targetRule = rules.find((r) => r.line === targetLine)
   if (!targetRule) {
-    // 后备：直接删除该行
+    // Fallback: delete the line directly
     if (targetLine > 0 && targetLine <= lines.length) {
       lines.splice(targetLine - 1, 1)
     }
@@ -34,25 +34,25 @@ export function deduplicateContent(content: string, issue: LintIssue): string {
 
   const normalized = targetRule.text.trim().toLowerCase()
 
-  // 找到所有相同 normalized 文本的规则
+  // Find all rules with the same normalized text
   const duplicates = rules.filter(
     (r) => r.text.trim().toLowerCase() === normalized,
   )
 
   if (duplicates.length < 2) {
-    // 没有真正的重复
+    // No real duplicates found
     if (targetLine > 0 && targetLine <= lines.length) {
       lines.splice(targetLine - 1, 1)
     }
     return lines.join('\n')
   }
 
-  // 找出内容最长的版本（保留这一个）
+  // Find the longest version (keep this one)
   const longest = duplicates.reduce((a, b) =>
     a.text.length >= b.text.length ? a : b,
   )
 
-  // 删除所有较短的版本（从后往前，避免行号偏移）
+  // Remove all shorter versions (from back to front to avoid line number shifting)
   const toRemove = duplicates
     .filter((d) => d.line !== longest.line)
     .sort((a, b) => b.line - a.line)
@@ -67,8 +67,8 @@ export function deduplicateContent(content: string, issue: LintIssue): string {
 }
 
 /**
- * 计算两条文本的相似度（简单 Jaccard 基于词）。
- * 用于语义重复检测的辅助函数。
+ * Calculate similarity between two texts (simple word-based Jaccard).
+ * Helper function for semantic duplicate detection.
  */
 export function textSimilarity(a: string, b: string): number {
   const wordsA = new Set(a.toLowerCase().split(/\s+/).filter(Boolean))

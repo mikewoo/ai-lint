@@ -8,7 +8,7 @@ const fixture = (name: string) =>
   readFileSync(resolve(import.meta.dirname, 'fixtures', name), 'utf-8')
 
 describe('parseRules', () => {
-  it('从健康配置中提取规则条目', () => {
+  it('extracts rule entries from healthy config', () => {
     const content = fixture('healthy-claude.md')
     const rules = parseRules(content)
 
@@ -19,7 +19,7 @@ describe('parseRules', () => {
     })
   })
 
-  it('跳过标题行', () => {
+  it('skips heading lines', () => {
     const content = fixture('healthy-claude.md')
     const rules = parseRules(content)
 
@@ -29,7 +29,7 @@ describe('parseRules', () => {
     expect(hasHeadings).toBe(false)
   })
 
-  it('跳过空行', () => {
+  it('skips empty lines', () => {
     const content = '# Title\n\n\n- Rule one\n'
     const rules = parseRules(content)
 
@@ -37,14 +37,14 @@ describe('parseRules', () => {
     expect(rules[0].text).toBe('Rule one')
   })
 
-  it('跳过水平分割线', () => {
+  it('skips horizontal rules', () => {
     const content = '- Rule one\n---\n- Rule two\n'
     const rules = parseRules(content)
 
     expect(rules).toHaveLength(2)
   })
 
-  it('跳过代码块内容', () => {
+  it('skips code block content', () => {
     const content = [
       '- Rule outside code block',
       '```',
@@ -61,7 +61,7 @@ describe('parseRules', () => {
     expect(rules[1].text).toBe('Rule after code block')
   })
 
-  it('检测重复行', () => {
+  it('detects duplicate lines', () => {
     const content = fixture('duplicate-claude.md')
     const rules = parseRules(content)
 
@@ -75,7 +75,7 @@ describe('parseRules', () => {
     expect(duplicates).toContain('run npm test before committing')
   })
 
-  it('过滤过短的条目', () => {
+  it('filters out entries that are too short', () => {
     const content = '- OK rule that is long enough\n- short\n'
     const rules = parseRules(content)
 
@@ -83,7 +83,7 @@ describe('parseRules', () => {
     expect(rules[0].text).toBe('OK rule that is long enough')
   })
 
-  it('跳过 frontmatter 内容', () => {
+  it('skips frontmatter content', () => {
     const content = [
       '---',
       'name: test-skill',
@@ -96,7 +96,7 @@ describe('parseRules', () => {
 
     const rules = parseRules(content)
 
-    // frontmatter 中的内容不应被解析为规则
+    // content inside frontmatter should not be parsed as rules
     const hasFrontmatterContent = rules.some(
       (r) => r.text.includes('test-skill') || r.text.includes('A test skill'),
     )
@@ -104,7 +104,7 @@ describe('parseRules', () => {
     expect(rules.length).toBeGreaterThanOrEqual(2)
   })
 
-  it('保留行号信息', () => {
+  it('preserves line number information', () => {
     const content = fixture('healthy-claude.md')
     const rules = parseRules(content)
 
@@ -114,7 +114,7 @@ describe('parseRules', () => {
     }
   })
 
-  it('处理有序列表', () => {
+  it('handles ordered lists', () => {
     const content = [
       '# Steps',
       '1. First step in the process',
@@ -129,7 +129,7 @@ describe('parseRules', () => {
     expect(rules[1].text).toBe('Second step in the process')
   })
 
-  it('捕获独立段落中的规则文本', () => {
+  it('captures rule text in standalone paragraphs', () => {
     const content = [
       'Always use TypeScript for new files.',
       '',
@@ -145,7 +145,7 @@ describe('parseRules', () => {
 })
 
 describe('parseFrontmatter', () => {
-  it('解析有效的 frontmatter', () => {
+  it('parses valid frontmatter', () => {
     const content = fixture('skills/skill-a/SKILL.md')
     const meta = parseFrontmatter(content)
 
@@ -154,28 +154,28 @@ describe('parseFrontmatter', () => {
     expect(meta!.description).toContain('Premium brand-kit')
   })
 
-  it('无 frontmatter 时返回 null', () => {
+  it('returns null when there is no frontmatter', () => {
     const content = '# Just a markdown file\n\nSome content here.\n'
     const meta = parseFrontmatter(content)
 
     expect(meta).toBeNull()
   })
 
-  it('name 缺失时返回 null', () => {
+  it('returns null when name is missing', () => {
     const content = '---\ndescription: Missing name field\n---\n# Content\n'
     const meta = parseFrontmatter(content)
 
     expect(meta).toBeNull()
   })
 
-  it('未闭合的 frontmatter 返回 null', () => {
+  it('returns null for unclosed frontmatter', () => {
     const content = '---\nname: incomplete\n'
     const meta = parseFrontmatter(content)
 
     expect(meta).toBeNull()
   })
 
-  it('去除值的引号', () => {
+  it('strips quotes from values', () => {
     const content = '---\nname: "quoted-skill"\ndescription: \'A description\'\n---\n# Content\n'
     const meta = parseFrontmatter(content)
 
@@ -183,7 +183,7 @@ describe('parseFrontmatter', () => {
     expect(meta!.description).toBe('A description')
   })
 
-  it('解析 skill-b 的 frontmatter', () => {
+  it('parses skill-b frontmatter', () => {
     const content = fixture('skills/skill-b/SKILL.md')
     const meta = parseFrontmatter(content)
 
@@ -192,7 +192,7 @@ describe('parseFrontmatter', () => {
     expect(meta!.description).toContain('logo design')
   })
 
-  it('跳过 frontmatter 中的注释行', () => {
+  it('skips comment lines in frontmatter', () => {
     const content = '---\n# This is a comment\nname: my-skill\ndescription: test\n---\n# Content\n'
     const meta = parseFrontmatter(content)
 

@@ -3,7 +3,7 @@ import { detectCrossFileConflicts } from '../src/cross-files/conflict.js'
 import { detectSkillOverlap, type SkillInfo } from '../src/cross-files/skill-overlap.js'
 
 describe('detectCrossFileConflicts', () => {
-  it('检测跨文件缩进冲突', () => {
+  it('detects cross-file indentation conflict', () => {
     const files = [
       {
         path: '/project/CLAUDE.md',
@@ -24,7 +24,7 @@ describe('detectCrossFileConflicts', () => {
     expect(issues[0].file).toContain('↔')
   })
 
-  it('无冲突的文件对不报告', () => {
+  it('non-conflicting file pairs are not reported', () => {
     const files = [
       {
         path: '/project/CLAUDE.md',
@@ -42,7 +42,7 @@ describe('detectCrossFileConflicts', () => {
     expect(issues).toHaveLength(0)
   })
 
-  it('单个文件不报告', () => {
+  it('single file is not reported', () => {
     const files = [
       {
         path: '/project/CLAUDE.md',
@@ -57,7 +57,7 @@ describe('detectCrossFileConflicts', () => {
 })
 
 describe('detectSkillOverlap', () => {
-  it('检测高度重叠的 Skill', () => {
+  it('detects highly overlapping skills', () => {
     const skills: SkillInfo[] = [
       {
         name: 'image-generator',
@@ -102,7 +102,7 @@ describe('detectSkillOverlap', () => {
     expect(issues[0].severity).toBe('warning')
   })
 
-  it('不同领域的 Skill 不报告重叠', () => {
+  it('skills from different domains are not reported as overlapping', () => {
     const skills: SkillInfo[] = [
       {
         name: 'image-gen',
@@ -122,7 +122,7 @@ describe('detectSkillOverlap', () => {
     expect(issues).toHaveLength(0)
   })
 
-  it('只有 0-1 个 Skill 时不报告', () => {
+  it('does not report with 0-1 skills', () => {
     const singleSkill: SkillInfo[] = [
       {
         name: 'only-skill',

@@ -2,48 +2,48 @@ import type { LintIssue } from '../types.js'
 import { parseRules } from '../parser/markdown.js'
 
 /**
- * 冲突对：关键词 A ↔ 关键词 B，如果同一文件中同时出现，即为冲突。
+ * Conflict pairs: keyword A ↔ keyword B. If both appear in the same file, it is a conflict.
  */
 const CONFLICT_PAIRS: Array<{ a: RegExp; b: RegExp; topic: string }> = [
   {
     a: /(?:use|使用)\s+(?:tabs|tab)\s+(?:for|来)?\s*indent/i,
     b: /(?:use|使用)\s+spaces?\s+(?:for|来)?\s*indent/i,
-    topic: '缩进方式 (tabs vs spaces)',
+    topic: 'Indentation style (tabs vs spaces)',
   },
   {
     a: /always\s+use\s+semicolon/i,
     b: /(?:do\s+not\s+use|no|avoid)\s+semicolon/i,
-    topic: '分号使用 (use vs avoid)',
+    topic: 'Semicolon usage (use vs avoid)',
   },
   {
     a: /使用分号/,
     b: /(?:不使用|避免使用|禁止使用)分号/,
-    topic: '分号使用 (使用 vs 避免)',
+    topic: 'Semicolon usage (use vs avoid, CN)',
   },
   {
     a: /(?:prefer|use)\s+(?:single|')\s*quote/i,
     b: /(?:prefer|use)\s+(?:double|")\s*quote/i,
-    topic: '引号风格 (single vs double)',
+    topic: 'Quote style (single vs double)',
   },
   {
     a: /使用单引号/,
     b: /使用双引号/,
-    topic: '引号风格 (单引号 vs 双引号)',
+    topic: 'Quote style (single vs double, CN)',
   },
   {
     a: /(?:max(?:imum)?|最长)\s*(?:line\s*)?(?:length|宽度).*?(?:80|100|120)/i,
     b: /(?:max(?:imum)?|最长)\s*(?:line\s*)?(?:length|宽度).*?(?:80|100|120)/i,
-    topic: '行宽限制数值冲突',
+    topic: 'Line length limit value conflict',
   },
   {
     a: /(?:always|必须|务必|一定要?)\s+add\s+(?:type\s+)?annotation/i,
     b: /(?:avoid|skip|不要|避免)\s+(?:type\s+)?annotation/i,
-    topic: '类型注解 (添加 vs 避免)',
+    topic: 'Type annotation (add vs avoid)',
   },
   {
     a: /使用\s*(?:pnpm|npm|yarn)/,
     b: /使用\s*(?:pnpm|npm|yarn)/,
-    topic: '包管理器选择冲突',
+    topic: 'Package manager selection conflict',
   },
 ]
 
@@ -53,14 +53,14 @@ export const noConflict = {
   files: ['CLAUDE.md', 'AGENTS.md', 'SKILL.md', '.cursorrules', '.windsurfrules', 'GEMINI.md', 'copilot-instructions.md'],
 
   /**
-   * 单文件冲突检测。
+   * Single-file conflict detection.
    */
   check(content: string, filePath: string): LintIssue[] {
     const rules = parseRules(content)
     const issues: LintIssue[] = []
 
     for (const { a, b, topic } of CONFLICT_PAIRS) {
-      // 检查是否存在两两冲突
+      // Check for pairwise conflicts
       const matchA = rules.filter((r) => {
         a.lastIndex = 0
         return a.test(r.text)
@@ -71,8 +71,8 @@ export const noConflict = {
       })
 
       if (matchA.length > 0 && matchB.length > 0) {
-        // 特别处理包管理器：需要是不同的包管理器才算冲突
-        if (topic.includes('包管理器')) {
+        // Special handling for package manager: must be different managers to count as conflict
+        if (topic.includes('Package manager')) {
           const pkgsA = extractPackageManager(matchA.map((r) => r.text))
           const pkgsB = extractPackageManager(matchB.map((r) => r.text))
           if (pkgsA.length === 0 || pkgsB.length === 0) continue
@@ -80,8 +80,8 @@ export const noConflict = {
           if (same) continue
         }
 
-        // 特别处理行宽：需要数值不同才算冲突
-        if (topic.includes('行宽')) {
+        // Special handling for line length: must have different values to count as conflict
+        if (topic.includes('Line length')) {
           const numsA = extractNumbers(matchA.map((r) => r.text))
           const numsB = extractNumbers(matchB.map((r) => r.text))
           if (numsA.length === 0 || numsB.length === 0) continue
@@ -94,7 +94,7 @@ export const noConflict = {
           severity: 'error',
           file: filePath,
           line: matchB[0].line,
-          message: `${topic} — 冲突: (行 ${matchA[0].line}) 与 (行 ${matchB[0].line})`,
+          message: `${topic} — conflict: (line ${matchA[0].line}) vs (line ${matchB[0].line})`,
           fixable: false,
         })
       }
@@ -104,7 +104,7 @@ export const noConflict = {
   },
 
   /**
-   * 跨文件冲突检测：检查两个文件是否有冲突指令。
+   * Cross-file conflict detection: check whether two files have conflicting instructions.
    */
   checkCross(
     fileA: { content: string; path: string },

@@ -12,8 +12,8 @@ describe('CLI integration', () => {
   beforeAll(() => {
     tmpDir = mkdtempSync(join(tmpdir(), 'ai-lint-cli-test-'))
 
-    // 创建有问题和没问题的配置文件
-    // 有问题的 CLAUDE.md
+    // Create config files with and without issues
+    // CLAUDE.md with issues
     writeFileSync(join(tmpDir, 'CLAUDE.md'), [
       '# Test Rules',
       '- Use TypeScript strict mode',
@@ -21,7 +21,7 @@ describe('CLI integration', () => {
       '- Please be absolutely sure to always run tests',
     ].join('\n'))
 
-    // 有 frontmatter 的 skill
+    // skill with frontmatter
     mkdirSync(join(tmpDir, 'skills', 'good-skill'), { recursive: true })
     writeFileSync(join(tmpDir, 'skills', 'good-skill', 'SKILL.md'), [
       '---',
@@ -32,14 +32,14 @@ describe('CLI integration', () => {
       '- Do something useful',
     ].join('\n'))
 
-    // 没有 frontmatter 的 skill
+    // skill without frontmatter
     mkdirSync(join(tmpDir, 'skills', 'bad-skill'), { recursive: true })
     writeFileSync(join(tmpDir, 'skills', 'bad-skill', 'SKILL.md'), [
       '# Bad Skill',
       '- Has no frontmatter',
     ].join('\n'))
 
-    // 空目录
+    // empty directory
     mkdirSync(join(tmpDir, 'empty-dir'), { recursive: true })
   })
 
@@ -47,7 +47,7 @@ describe('CLI integration', () => {
     rmSync(tmpDir, { recursive: true, force: true })
   })
 
-  it('ai-lint 发现文件并输出格式正确', () => {
+  it('ai-lint discovers files and outputs correct format', () => {
     const output = execSync(`node ${CLI} ${tmpDir}`, { encoding: 'utf-8' })
 
     expect(output).toContain('CLAUDE.md')
@@ -60,7 +60,7 @@ describe('CLI integration', () => {
     expect(output).toContain('files scanned')
   })
 
-  it('ai-lint --json 输出有效 JSON', () => {
+  it('ai-lint --json outputs valid JSON', () => {
     const output = execSync(`node ${CLI} ${tmpDir} --json`, { encoding: 'utf-8' })
     const parsed = JSON.parse(output)
 
@@ -72,13 +72,13 @@ describe('CLI integration', () => {
     expect(typeof parsed.summary.warnings).toBe('number')
   })
 
-  it('ai-lint --ci 有问题时 exit 1', () => {
+  it('ai-lint --ci exits 1 when there are issues', () => {
     expect(() => {
       execSync(`node ${CLI} ${tmpDir} --ci`, { encoding: 'utf-8', stdio: 'pipe' })
     }).toThrow()
   })
 
-  it('ai-lint --ci 无问题时 exit 0', () => {
+  it('ai-lint --ci exits 0 when no issues', () => {
     const result = execSync(`node ${CLI} ${join(tmpDir, 'empty-dir')} --ci`, {
       encoding: 'utf-8',
       stdio: 'pipe',
@@ -86,25 +86,25 @@ describe('CLI integration', () => {
     expect(result).toBeDefined()
   })
 
-  it('ai-lint --no-color 禁用颜色输出', () => {
+  it('ai-lint --no-color disables color output', () => {
     const output = execSync(`node ${CLI} ${tmpDir} --no-color`, { encoding: 'utf-8' })
-    // 不应该包含 ANSI 转义码
+    // should not contain ANSI escape codes
     expect(output).not.toContain('[')
   })
 
-  it('ai-lint explain 显示规则详情', () => {
+  it('ai-lint explain shows rule details', () => {
     const output = execSync(`node ${CLI} explain no-duplicate`, { encoding: 'utf-8' })
     expect(output).toContain('no-duplicate')
     expect(output).toContain('Detect literal duplicate')
   })
 
-  it('ai-lint explain 未知规则报错', () => {
+  it('ai-lint explain errors on unknown rule', () => {
     expect(() => {
       execSync(`node ${CLI} explain nonexistent-rule`, { encoding: 'utf-8', stdio: 'pipe' })
     }).toThrow()
   })
 
-  it('ai-lint fix --dry-run 预览不修改文件', () => {
+  it('ai-lint fix --dry-run previews without modifying files', () => {
     const before = execSync(`node ${CLI} ${tmpDir} --json`, { encoding: 'utf-8' })
     const beforeParsed = JSON.parse(before)
     const beforeErrors = beforeParsed.summary.errors
@@ -112,7 +112,7 @@ describe('CLI integration', () => {
     const output = execSync(`node ${CLI} fix ${tmpDir} --dry-run`, { encoding: 'utf-8' })
     expect(output).toContain('Would fix')
 
-    // 文件应该未被修改
+    // files should not be modified
     const after = execSync(`node ${CLI} ${tmpDir} --json`, { encoding: 'utf-8' })
     const afterParsed = JSON.parse(after)
     expect(afterParsed.summary.errors).toBe(beforeErrors)

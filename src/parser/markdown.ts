@@ -1,30 +1,30 @@
 import type { RuleEntry } from '../types.js'
 
 /**
- * 匹配 Markdown 无序列表项：
- *   - 文本
- *   * 文本
- *   + 文本
- * 支持嵌套缩进（如 "  - 文本" → 视为一级列表）
+ * Matches Markdown unordered list items:
+ *   - text
+ *   * text
+ *   + text
+ * Supports nested indentation (e.g. "  - text" → treated as top-level list)
  */
 const LIST_ITEM_RE = /^\s*[-*+]\s+/
 
 /**
- * 匹配 Markdown 有序列表项：
- *   1. 文本
- *   1) 文本
+ * Matches Markdown ordered list items:
+ *   1. text
+ *   1) text
  */
 const ORDERED_LIST_RE = /^\s*\d+[.)]\s+/
 
 /**
- * 匹配 Markdown 标题：
- *   # 标题
- *   ## 标题
+ * Matches Markdown headings:
+ *   # heading
+ *   ## heading
  */
 const HEADING_RE = /^#{1,6}\s+/
 
 /**
- * 匹配水平分割线：
+ * Matches horizontal rules:
  *   ---
  *   ***
  *   ___
@@ -32,25 +32,25 @@ const HEADING_RE = /^#{1,6}\s+/
 const HR_RE = /^[-*_]{3,}\s*$/
 
 /**
- * 匹配代码块边界：
+ * Matches code fence boundaries:
  *   ```
  *   ~~~
  */
 const FENCE_RE = /^`{3,}|^~{3,}/
 
-/** 被视为「有价值规则文本」的最小字符数 */
+/** Minimum character count for text to be considered a "valuable rule" */
 const MIN_RULE_LENGTH = 8
 
 /**
- * 将 Markdown 文本解析为规则条目列表。
+ * Parses Markdown text into a list of rule entries.
  *
- * 提取规则：
- * 1. 列表项（`-` / `*` / `+` / `1.`）→ 去除列表标记，保留文本
- * 2. 独立段落（非空行、非标题、非分割线）→ 视为潜在规则
- * 3. 跳过代码块内容
+ * Extraction rules:
+ * 1. List items (`-` / `*` / `+` / `1.`) — strip list markers, keep text
+ * 2. Standalone paragraphs (non-blank, non-heading, non-horizontal-rule) — treated as potential rules
+ * 3. Skip code block content
  *
- * @param content - Markdown 原始文本
- * @returns 规则条目数组，按行号排序
+ * @param content - Raw Markdown text
+ * @returns Array of rule entries, sorted by line number
  */
 export function parseRules(content: string): RuleEntry[] {
   const lines = content.split('\n')
@@ -64,7 +64,7 @@ export function parseRules(content: string): RuleEntry[] {
     const trimmed = raw.trim()
     const lineNumber = i + 1
 
-    // 检测 frontmatter 边界（文件开头的 ---）
+    // Detect frontmatter boundaries (--- at the start of the file)
     if (i === 0 && trimmed === '---') {
       inFrontmatter = true
       frontmatterDelimCount = 1
@@ -80,32 +80,32 @@ export function parseRules(content: string): RuleEntry[] {
       continue
     }
 
-    // 检测代码块边界
+    // Detect code fence boundaries
     if (FENCE_RE.test(trimmed)) {
       inCodeBlock = !inCodeBlock
       continue
     }
 
-    // 跳过代码块内容
+    // Skip code block content
     if (inCodeBlock) continue
 
-    // 跳过空行
+    // Skip blank lines
     if (trimmed === '') continue
 
-    // 跳过标题
+    // Skip headings
     if (HEADING_RE.test(trimmed)) continue
 
-    // 跳过水平分割线
+    // Skip horizontal rules
     if (HR_RE.test(trimmed)) continue
 
-    // 跳过纯链接/图片行
+    // Skip standalone link/image lines
     if (/^\[.+\]:\s*(http|<)/.test(trimmed)) continue
     if (/^!\[.+\]\(.+\)$/.test(trimmed) && trimmed.length < 50) continue
 
-    // 跳过 HTML 注释
+    // Skip HTML comments
     if (trimmed.startsWith('<!--')) continue
 
-    // 列表项
+    // List items
     const listMatch = trimmed.match(LIST_ITEM_RE)
     const orderedMatch = trimmed.match(ORDERED_LIST_RE)
 
@@ -120,11 +120,11 @@ export function parseRules(content: string): RuleEntry[] {
         entries.push({ text, line: lineNumber, raw })
       }
     } else {
-      // 独立段落 — 视为潜在规则
-      // 要求：以大写字母或中文开头（避免捕获代码片段残余）
+      // Standalone paragraph — treated as potential rule
+      // Requirement: must start with an uppercase letter or CJK character (to avoid catching code snippet remnants)
       if (isRuleLikeLine(trimmed) && trimmed.length >= MIN_RULE_LENGTH) {
-        // 合并连续的非列表段落（如多行段落）
-        // 简化处理：每个独立行作为一个规则条目
+        // Merge consecutive non-list paragraphs (e.g. multi-line paragraphs)
+        // Simplified: each standalone line becomes one rule entry
         entries.push({ text: trimmed, line: lineNumber, raw })
       }
     }
@@ -134,17 +134,17 @@ export function parseRules(content: string): RuleEntry[] {
 }
 
 /**
- * 判断一行文本是否像一条「规则」。
- * 规则行特征：以大写字母、中文、或常见指令词开头。
+ * Determines whether a line of text looks like a "rule".
+ * Rule line characteristics: starts with an uppercase letter, CJK character, or common instruction word.
  */
 function isRuleLikeLine(text: string): boolean {
-  // 中文开头
+  // CJK character start
   if (/^[一-鿿]/.test(text)) return true
 
-  // 英文大写字母或数字开头
+  // English uppercase letter or digit start
   if (/^[A-Z0-9]/.test(text)) return true
 
-  // 常见指令关键词开头
+  // Common instruction keyword starters
   const instructionStarters = [
     'always', 'never', 'ensure', 'make', 'use', 'avoid',
     'prefer', 'do not', "don't", 'all ', 'every ', 'you ',

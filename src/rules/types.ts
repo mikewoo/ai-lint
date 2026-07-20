@@ -1,21 +1,21 @@
 import type { LintIssue } from '../types.js'
 
-/** 单文件检测规则接口 */
+/** Single-file lint rule interface */
 export interface Rule {
   id: string
   description: string
-  /** 适用文件类型（如 'CLAUDE.md', 'SKILL.md'） */
+  /** Applicable file types (e.g. 'CLAUDE.md', 'SKILL.md') */
   files: string[]
-  /** 检查函数 */
+  /** Check function */
   check(content: string, filePath: string): LintIssue[]
-  /** 修复函数（可选） */
+  /** Fix function (optional) */
   fix?(content: string, issue: LintIssue): string
 }
 
-/** 跨文件检测规则接口 */
+/** Cross-file lint rule interface */
 export interface CrossFileRule {
   id: string
   description: string
-  /** 检查函数 — 接收所有文件的元信息映射 */
+  /** Check function — receives a map of all file metadata */
   check(files: Map<string, { content: string; path: string }>): LintIssue[]
 }

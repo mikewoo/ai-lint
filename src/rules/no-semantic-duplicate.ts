@@ -2,10 +2,10 @@ import type { LintIssue } from '../types.js'
 import { textSimilarity } from '../fixer/deduplicate.js'
 import { parseRules } from '../parser/markdown.js'
 
-/** 视为语义重复的最小相似度阈值 */
+/** Minimum similarity threshold to consider as semantic duplicate */
 const SIMILARITY_THRESHOLD = 0.50
 
-/** 完全字面相同不重复报告（已由 no-duplicate 处理） */
+/** Literal identical text is not reported again (already handled by no-duplicate) */
 const LITERAL_SAME_THRESHOLD = 0.95
 
 export const noSemanticDuplicate = {
@@ -23,7 +23,7 @@ export const noSemanticDuplicate = {
       for (let j = i + 1; j < rules.length; j++) {
         const sim = textSimilarity(rules[i].text, rules[j].text)
 
-        // 跳过完全相同的（已由 no-duplicate 处理）
+        // Skip literal duplicates (already handled by no-duplicate)
         if (sim > LITERAL_SAME_THRESHOLD) continue
 
         if (sim >= SIMILARITY_THRESHOLD) {
@@ -32,7 +32,7 @@ export const noSemanticDuplicate = {
             severity: 'warning',
             file: filePath,
             line: rules[j].line,
-            message: `"${truncate(rules[i].text, 40)}" 与 (行 ${rules[i].line}) "${truncate(rules[j].text, 40)}" 语义相似 (${Math.round(sim * 100)}%)`,
+            message: `"${truncate(rules[i].text, 40)}" is semantically similar to (line ${rules[i].line}) "${truncate(rules[j].text, 40)}" (${Math.round(sim * 100)}%)`,
             fixable: false,
           })
         }

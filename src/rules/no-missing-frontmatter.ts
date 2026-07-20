@@ -2,7 +2,7 @@ import type { LintIssue } from '../types.js'
 import { parseFrontmatter } from '../parser/frontmatter.js'
 
 /**
- * SKILL.md 最小 frontmatter 模板。
+ * Minimal SKILL.md frontmatter template.
  */
 function minimalFrontmatter(skillName?: string): string {
   const name = skillName || 'my-skill'
@@ -25,13 +25,13 @@ export const noMissingFrontmatter = {
     const issues: LintIssue[] = []
 
     if (!meta) {
-      // 完全没有 frontmatter
+      // No frontmatter at all
       issues.push({
         ruleId: 'no-missing-frontmatter',
         severity: 'error',
         file: filePath,
         line: 1,
-        message: 'SKILL.md 缺少 YAML frontmatter（需要 name + description）',
+        message: 'SKILL.md is missing YAML frontmatter (requires name + description)',
         fixable: true,
       })
       return issues
@@ -49,7 +49,7 @@ export const noMissingFrontmatter = {
         severity: 'error',
         file: filePath,
         line: line || 2,
-        message: 'SKILL.md 的 frontmatter 缺少 description 字段',
+        message: 'SKILL.md frontmatter is missing the description field',
         fixable: true,
       })
     }
@@ -61,15 +61,15 @@ export const noMissingFrontmatter = {
     const meta = parseFrontmatter(content)
 
     if (!meta) {
-      // 完全没有 frontmatter — 在前面添加模板
+      // No frontmatter at all — prepend the template
       const dirName = issue.file.split('/').slice(-2, -1)[0] || 'my-skill'
       return minimalFrontmatter(dirName) + content
     }
 
     if (!meta.description || meta.description.trim() === '') {
-      // 缺少 description — 在 name 行后插入
+      // Missing description — insert after the name line
       const lines = content.split('\n')
-      let insertAfter = 1 // 默认在 name 行之后
+      let insertAfter = 1 // Default: after the name line
       for (let i = 0; i < lines.length; i++) {
         if (lines[i].trim().startsWith('name:')) {
           insertAfter = i

@@ -8,7 +8,7 @@ export interface FileContent {
 }
 
 /**
- * 跨文件冲突检测：对每对文件运行 noConflict.checkCross。
+ * Cross-file conflict detection: runs noConflict.checkCross on every pair of files.
  */
 export function detectCrossFileConflicts(files: FileContent[]): LintIssue[] {
   const issues: LintIssue[] = []

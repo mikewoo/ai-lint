@@ -8,48 +8,48 @@ import type { LintIssue } from '../src/types.js'
 // ============================================================
 
 describe('simplifyText', () => {
-  it('简化中文冗余', () => {
+  it('simplifies Chinese verbose text', () => {
     expect(simplifyText('请务必确保一定在提交前运行所有测试'))
       .toBe('请在提交前运行所有测试')
   })
 
-  it('简化英文冗余', () => {
+  it('simplifies English verbose text', () => {
     expect(simplifyText('Please be absolutely sure to always run tests'))
       .toBe('Please always run tests')
   })
 
-  it('去除引导填充词', () => {
+  it('removes leading filler words', () => {
     expect(simplifyText('I want you to use TypeScript strict mode'))
       .toBe('Use TypeScript strict mode')
   })
 
-  it('去除记忆提醒词', () => {
+  it('removes memory reminder phrases', () => {
     expect(simplifyText('Remember that you should always format before committing'))
       .toBe('You should always format before committing')
   })
 
-  it('替换长短语为短词', () => {
+  it('replaces long phrases with short words', () => {
     expect(simplifyText('Due to the fact that it is essential to run tests'))
       .toBe('Because must run tests')
   })
 
-  it('合并多余空格', () => {
+  it('collapses extra whitespace', () => {
     expect(simplifyText('in   order   to   be  able  to  run'))
       .toBe('To run')
   })
 
-  it('简洁文本保持不变', () => {
+  it('leaves concise text unchanged', () => {
     const original = 'Use TypeScript strict mode'
     expect(simplifyText(original)).toBe(original)
   })
 
-  it('空字符串不报错', () => {
+  it('does not error on empty string', () => {
     expect(simplifyText('')).toBe('')
   })
 })
 
 describe('estimateSavings', () => {
-  it('估算冗余词的 token 节省量', () => {
+  it('estimates token savings from verbose words', () => {
     const savings = estimateSavings(
       'Please be absolutely sure to always run tests before committing',
       'Please always run tests before committing',
@@ -57,7 +57,7 @@ describe('estimateSavings', () => {
     expect(savings).toBeGreaterThan(0)
   })
 
-  it('相同文本节省为 0', () => {
+  it('returns zero savings for identical text', () => {
     expect(estimateSavings('hello', 'hello')).toBe(0)
   })
 })
@@ -67,7 +67,7 @@ describe('estimateSavings', () => {
 // ============================================================
 
 describe('deduplicateContent', () => {
-  it('保留更完整的重复项，删除较短的', () => {
+  it('keeps the more complete duplicate, removes the shorter one', () => {
     const content = [
       '- Use TypeScript strict mode',
       '- Enable source maps',
@@ -85,15 +85,15 @@ describe('deduplicateContent', () => {
 
     const fixed = deduplicateContent(content, issue)
 
-    // 较短版本应被删除
+    // shorter version should be removed
     expect(fixed).not.toContain('- Use TypeScript strict mode\n- Enable')
-    // 较长版本应保留
+    // longer version should be retained
     expect(fixed).toContain('Use TypeScript strict mode, enable noUncheckedIndexedAccess')
-    // 无关行应保留
+    // unrelated line should be retained
     expect(fixed).toContain('Enable source maps')
   })
 
-  it('相同长度的重复项：删除后来的', () => {
+  it('duplicates of equal length: removes the later one', () => {
     const content = [
       '- Use TypeScript strict mode',
       '- Use TypeScript strict mode',
@@ -111,12 +111,12 @@ describe('deduplicateContent', () => {
 
     const fixed = deduplicateContent(content, issue)
 
-    // 应该只剩一行 TypeScript 规则
+    // should only have one TypeScript rule line
     const occurrences = (fixed.match(/TypeScript strict mode/g) || []).length
     expect(occurrences).toBe(1)
   })
 
-  it('仅有唯一规则时不修改', () => {
+  it('does not modify when there is only a unique rule', () => {
     const content = '- Unique rule that appears only once\n- Another unique rule\n'
     const issue: LintIssue = {
       ruleId: 'no-duplicate',
@@ -127,7 +127,7 @@ describe('deduplicateContent', () => {
       fixable: true,
     }
 
-    // 删目标行（因无真正重复）
+    // removes target line (since there is no real duplicate)
     const fixed = deduplicateContent(content, issue)
     expect(fixed).toBe('- Another unique rule\n')
   })
@@ -138,15 +138,15 @@ describe('deduplicateContent', () => {
 // ============================================================
 
 describe('textSimilarity', () => {
-  it('完全相同文本 = 100%', () => {
+  it('identical text = 100%', () => {
     expect(textSimilarity('use typescript', 'use typescript')).toBe(1)
   })
 
-  it('完全不同文本 ≈ 0%', () => {
+  it('completely different text ≈ 0%', () => {
     expect(textSimilarity('apple', 'orange')).toBe(0)
   })
 
-  it('部分重叠文本', () => {
+  it('partially overlapping text', () => {
     const sim = textSimilarity(
       'use typescript strict mode',
       'use typescript with no unchecked access',
@@ -155,11 +155,11 @@ describe('textSimilarity', () => {
     expect(sim).toBeLessThan(0.8)
   })
 
-  it('忽略大小写', () => {
+  it('ignores case', () => {
     expect(textSimilarity('USE TYPESCRIPT', 'use typescript')).toBe(1)
   })
 
-  it('空文本处理', () => {
+  it('handles empty text', () => {
     expect(textSimilarity('', '')).toBe(0)
     expect(textSimilarity('hello', '')).toBe(0)
   })

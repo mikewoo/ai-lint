@@ -62,7 +62,7 @@ program
     const cwd = fixPath || process.cwd()
     const { result, fixed, details } = runFix({ cwd, fix: true, dryRun: options.dryRun })
 
-    // 显示逐条修复详情
+    // Display per-item fix details
     for (const d of details) {
       const prefix = options.dryRun ? '  ◌' : '  ✅'
       console.log(`${prefix} ${d.ruleId.padEnd(24)} ${d.file}${d.line ? `:${d.line}` : ''}`)

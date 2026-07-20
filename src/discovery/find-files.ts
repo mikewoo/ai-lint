@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, statSync } from 'node:fs'
 import { basename, join, resolve } from 'node:path'
 
-/** 已知的 AI 配置文件名 */
+/** Known AI configuration file names */
 const KNOWN_CONFIG_FILES = [
   'CLAUDE.md',
   'AGENTS.md',
@@ -11,34 +11,35 @@ const KNOWN_CONFIG_FILES = [
   'copilot-instructions.md',
 ]
 
-/** Skill 定义文件名 */
+/** Skill definition file name */
 const SKILL_FILE = 'SKILL.md'
 
 export interface FoundFile {
-  /** 绝对路径 */
+  /** Absolute path */
   path: string
-  /** 文件名（用于规则匹配） */
+  /** File name (used for rule matching) */
   name: string
-  /** 文件类型 */
+  /** File type */
   type: 'config' | 'skill'
 }
 
 /**
- * 扫描目录，发现所有 AI 配置文件。
+ * Scan a directory to discover all AI configuration files.
  *
- * 检测逻辑：
- * 1. 根目录下的已知配置文件名
- * 2. 子目录 `skills/* /SKILL.md`（仅一层深度）
- * 3. 递归子目录中的 SKILL.md（最多 3 层）
+ * Detection logic:
+ * 1. Known configuration file names in the root directory
+ * 2. Files under .claude/ directory
+ * 3. SKILL.md under skills/ directory (direct child dirs)
+ * 4. SKILL.md under .claude/skills/ directory
  *
- * @param rootDir - 扫描根目录
- * @returns 发现的文件列表
+ * @param rootDir - Root directory to scan
+ * @returns List of discovered files
  */
 export function findFiles(rootDir: string): FoundFile[] {
   const absRoot = resolve(rootDir)
   const found: FoundFile[] = []
 
-  // 1. 根目录已知配置
+  // 1. Known configs in root directory
   for (const name of KNOWN_CONFIG_FILES) {
     const p = join(absRoot, name)
     if (existsSync(p) && statSync(p).isFile()) {
@@ -46,7 +47,7 @@ export function findFiles(rootDir: string): FoundFile[] {
     }
   }
 
-  // 2. .claude 目录下的文件
+  // 2. Files under .claude directory
   const claudeDir = join(absRoot, '.claude')
   if (existsSync(claudeDir) && statSync(claudeDir).isDirectory()) {
     for (const name of KNOWN_CONFIG_FILES) {
@@ -57,7 +58,7 @@ export function findFiles(rootDir: string): FoundFile[] {
     }
   }
 
-  // 3. skills/ 目录下的 SKILL.md（直接子目录）
+  // 3. SKILL.md under skills/ directory
   const skillsDir = join(absRoot, 'skills')
   if (existsSync(skillsDir) && statSync(skillsDir).isDirectory()) {
     try {
@@ -69,11 +70,11 @@ export function findFiles(rootDir: string): FoundFile[] {
         }
       }
     } catch {
-      // 目录读取出错，忽略
+      // Directory read error, ignore
     }
   }
 
-  // 4. .claude/skills/ 目录下的 SKILL.md
+  // 4. SKILL.md under .claude/skills/ directory
   const claudeSkillsDir = join(absRoot, '.claude', 'skills')
   if (existsSync(claudeSkillsDir) && statSync(claudeSkillsDir).isDirectory()) {
     try {
@@ -93,13 +94,13 @@ export function findFiles(rootDir: string): FoundFile[] {
 }
 
 /**
- * 为报告显示生成简短的相对路径。
+ * Generate a short relative path for report display.
  */
 export function shortPath(filePath: string, rootDir: string): string {
   const absRoot = resolve(rootDir)
   if (filePath.startsWith(absRoot)) {
     const rel = filePath.slice(absRoot.length).replace(/^\//, '')
-    // skill 文件显示为 skills/<name>/SKILL.md
+    // Skill files are displayed as skills/<name>/SKILL.md
     return rel || basename(filePath)
   }
   return basename(filePath)

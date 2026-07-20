@@ -11,7 +11,7 @@ import { noSkillBloat } from './no-skill-bloat.js'
 import { noStaleReference } from './no-stale-reference.js'
 import { noVerbose } from './no-verbose.js'
 
-/** 已注册的单文件规则 */
+/** Registered single-file rules */
 const rules = [
   noDuplicate,
   noSemanticDuplicate,
@@ -27,7 +27,7 @@ const rules = [
 ] as const
 
 /**
- * 获取适用于指定文件类型的所有规则。
+ * Get all rules applicable to a given file type.
  */
 export function getRulesForFile(fileName: string) {
   return rules.filter((r) =>
@@ -41,7 +41,7 @@ export function getRulesForFile(fileName: string) {
 }
 
 /**
- * 对指定文件运行所有适用的规则。
+ * Run all applicable rules against a given file.
  */
 export function lintFile(
   content: string,
@@ -56,7 +56,7 @@ export function lintFile(
       const issues = rule.check(content, filePath)
       allIssues.push(...issues)
     } catch (err) {
-      // 规则执行出错时报告但不中断
+      // Report rule execution errors without aborting
       console.error(`Rule ${rule.id} failed on ${filePath}:`, err)
     }
   }
@@ -65,7 +65,7 @@ export function lintFile(
 }
 
 /**
- * 获取修复函数。
+ * Get the fix function for a rule.
  */
 export function getFixer(ruleId: string) {
   const rule = rules.find((r) => r.id === ruleId)

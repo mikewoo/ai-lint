@@ -3,9 +3,9 @@ import { simplifyText } from '../fixer/simplify.js'
 import { parseRules } from '../parser/markdown.js'
 
 /**
- * 冗余表述模式 — [pattern, replacement, englishPattern?]
+ * Verbose phrasing patterns — [pattern, replacement, englishPattern?]
  *
- * 每条：匹配模式 → 建议替换 → 可选英文模式（用于中英双语检测）
+ * Each entry: match pattern → suggested replacement → optional English pattern (for bilingual detection)
  */
 const VERBOSE_PATTERNS: Array<{
   pattern: RegExp
@@ -15,17 +15,17 @@ const VERBOSE_PATTERNS: Array<{
   {
     pattern: /请务必确保一定(在|要|的?)/g,
     replacement: '请',
-    description: '「请务必确保一定」→「请」',
+    description: '"please be absolutely sure to" (CN) → "please"',
   },
   {
     pattern: /请务必?一定?要?确保/g,
     replacement: '确保',
-    description: '「请务必确保」→「确保」',
+    description: '"please must ensure" (CN) → "ensure"',
   },
   {
     pattern: /一定?必须要/g,
     replacement: '必须',
-    description: '「一定必须要」→「必须」',
+    description: '"absolutely must" (CN) → "must"',
   },
   {
     pattern: /please (be absolutely sure to|make absolutely certain to|always make sure to)/gi,
@@ -89,7 +89,7 @@ const VERBOSE_PATTERNS: Array<{
   },
 ]
 
-/** 触发检测的最小节省 token 数（避免报告微小优化） */
+/** Minimum token savings to trigger detection (avoid reporting trivial optimizations) */
 const MIN_TOKEN_SAVINGS = 3
 
 export const noVerbose = {
@@ -103,7 +103,7 @@ export const noVerbose = {
 
     for (const rule of rules) {
       for (const { pattern, replacement, description } of VERBOSE_PATTERNS) {
-        // 重置 lastIndex（全局正则需要）
+        // Reset lastIndex (required for global regex)
         pattern.lastIndex = 0
 
         const match = pattern.exec(rule.text)
@@ -118,7 +118,7 @@ export const noVerbose = {
               severity: 'warning',
               file: filePath,
               line: rule.line,
-              message: `${description} — 可节省 ~${Math.round(originalLen / replacementLen || originalLen)}%`,
+              message: `${description} — saves ~${Math.round(originalLen / replacementLen || originalLen)}%`,
               tokenWaste: tokensSaved,
               fixable: true,
             })

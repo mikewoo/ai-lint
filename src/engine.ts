@@ -8,13 +8,13 @@ import { summarize } from './report/render.js'
 import { getFixer, lintFile } from './rules/registry.js'
 
 export interface LintOptions {
-  /** 扫描根目录 */
+  /** Scan root directory */
   cwd?: string
-  /** 是否自动修复 */
+  /** Whether to auto-fix */
   fix?: boolean
-  /** --dry-run: 预览修复，不写入磁盘 */
+  /** --dry-run: preview fixes, don't write to disk */
   dryRun?: boolean
-  /** 是否启用跨文件检测 */
+  /** Whether to enable cross-file detection */
   crossFiles?: boolean
 }
 
@@ -32,7 +32,7 @@ export interface FixReport {
 }
 
 /**
- * 执行完整的 lint 流程。
+ * Execute the complete lint process.
  */
 export function runLint(options: LintOptions = {}): LintResult {
   const cwd = options.cwd || process.cwd()
@@ -51,9 +51,9 @@ export function runLint(options: LintOptions = {}): LintResult {
 }
 
 /**
- * 执行 fix 流程。
+ * Execute the fix process.
  *
- * 对每个文件依次：检测 → 修复 fixable → 写入磁盘（非 dry-run）→ 重新检测。
+ * For each file in turn: detect → fix fixable → write to disk (non-dry-run) → re-detect.
  */
 export function runFix(options: LintOptions = {}): FixReport {
   const cwd = options.cwd || process.cwd()
@@ -67,13 +67,13 @@ export function runFix(options: LintOptions = {}): FixReport {
     const displayName = shortPath(file.path, cwd)
     let fileFixed = 0
 
-    // 先检测所有问题
+    // First detect all issues
     const allIssues = lintFile(content, file.path, file.name)
 
-    // 仅处理 fixable 的问题
+    // Only handle fixable issues
     const fixable = allIssues.filter((i) => i.fixable)
 
-    // 从后往前修复（避免行号偏移）
+    // Fix from back to front (to avoid line number shifts)
     const sorted = [...fixable].sort((a, b) => (b.line || 0) - (a.line || 0))
 
     for (const issue of sorted) {
@@ -93,17 +93,17 @@ export function runFix(options: LintOptions = {}): FixReport {
             })
           }
         } catch {
-          // fix 失败，跳过
+          // fix failed, skip
         }
       }
     }
 
-    // 实际写入磁盘
+    // Actually write to disk
     if (!options.dryRun && fileFixed > 0) {
       writeFileSync(file.path, content, 'utf-8')
     }
 
-    // 修复后重新检测
+    // Re-detect after fix
     const remainingIssues = lintFile(content, file.path, file.name)
 
     fileResults.push({ file, issues: remainingIssues })
@@ -114,13 +114,13 @@ export function runFix(options: LintOptions = {}): FixReport {
 }
 
 /**
- * 跨文件检测：skill 重叠 + 跨文件冲突。
+ * Cross-file detection: skill overlap + cross-file conflicts.
  */
 export function runCrossFiles(options: LintOptions = {}): LintResult {
   const cwd = options.cwd || process.cwd()
   const files = findFiles(cwd)
 
-  // 1. 跨文件冲突检测
+  // 1. Cross-file conflict detection
   const conflictIssues = detectCrossFileConflicts(
     files.map((f) => ({
       path: f.path,
@@ -129,7 +129,7 @@ export function runCrossFiles(options: LintOptions = {}): LintResult {
     })),
   )
 
-  // 2. Skill 重叠检测
+  // 2. Skill overlap detection
   const skillFiles = files.filter((f) => f.type === 'skill')
   const skills: SkillInfo[] = []
 
@@ -144,7 +144,7 @@ export function runCrossFiles(options: LintOptions = {}): LintResult {
 
   const overlapIssues = detectSkillOverlap(skills)
 
-  // 汇总：生成伪 FileResult
+  // Summary: generate pseudo FileResult
   const allIssues = [...conflictIssues, ...overlapIssues]
 
   const summary: LintResult = {

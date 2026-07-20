@@ -1,11 +1,11 @@
 import type { SkillMeta } from '../types.js'
 
 /**
- * 从 Markdown 文件中提取 YAML frontmatter。
+ * Extracts YAML frontmatter from a Markdown file.
  *
- * 只处理文件开头的 `---` 包裹的 frontmatter 块。
- * 不依赖第三方 YAML 解析库 — 仅支持 `key: value` 格式，
- * 符合 SKILL.md 的 frontmatter 需求。
+ * Only processes frontmatter blocks wrapped by `---` at the start of the file.
+ * No dependency on third-party YAML parsing libraries — only supports `key: value` format,
+ * satisfying SKILL.md's frontmatter requirements.
  *
  * @example
  *   ---
@@ -17,13 +17,13 @@ import type { SkillMeta } from '../types.js'
  *   parseFrontmatter(content)
  *   // => { name: "brandkit", description: "Premium brand-kit..." }
  *
- * @param content - Markdown 文件完整内容
- * @returns 解析出的元信息，无 frontmatter 返回 null
+ * @param content - Full content of the Markdown file
+ * @returns Parsed metadata, or null if no frontmatter is present
  */
 export function parseFrontmatter(content: string): SkillMeta | null {
   const lines = content.split('\n')
 
-  // 文件必须以 --- 开头
+  // File must start with ---
   if (lines[0]?.trim() !== '---') return null
 
   const endIndex = lines.findIndex((line, i) => i > 0 && line.trim() === '---')
@@ -41,7 +41,7 @@ export function parseFrontmatter(content: string): SkillMeta | null {
     const key = line.slice(0, colonIndex).trim()
     let value = line.slice(colonIndex + 1).trim()
 
-    // 去除引号
+    // Strip quotes
     if (
       (value.startsWith('"') && value.endsWith('"')) ||
       (value.startsWith("'") && value.endsWith("'"))
@@ -52,7 +52,7 @@ export function parseFrontmatter(content: string): SkillMeta | null {
     meta[key] = value
   }
 
-  // 必须有 name，否则视为无效 frontmatter
+  // Must have name, otherwise treated as invalid frontmatter
   if (!meta.name) return null
 
   return meta
