@@ -42,7 +42,7 @@ npx al
 ### 免安装运行（推荐）
 
 ```bash
-npx ai-lint
+npx @itdest/ai-lint
 # 或使用缩写：
 npx al
 ```
@@ -50,7 +50,7 @@ npx al
 ### 全局安装
 
 ```bash
-npm install -g ai-lint
+npm install -g @itdest/ai-lint
 # 之后随处可用：
 ai-lint
 al           # 短别名
@@ -59,7 +59,7 @@ al           # 短别名
 ### 本地安装
 
 ```bash
-npm install --save-dev ai-lint
+npm install --save-dev @itdest/ai-lint
 # 添加到 package.json scripts：
 #   "lint:ai": "ai-lint --ci"
 ```
@@ -317,7 +317,7 @@ ai-lint --ci --json
 ai-lint --ci --cross-files
 
 # CI 流水线示例（GitHub Actions）
-- run: npx ai-lint --ci --no-color
+- run: npx @itdest/ai-lint --ci --no-color
 ```
 
 **退出码：**

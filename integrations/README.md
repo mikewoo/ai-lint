@@ -7,7 +7,7 @@ One command per tool. The AI agent will automatically check, fix, and monitor it
 ## Quick Install
 
 ```bash
-npm install -g ai-lint
+npm install -g @itdest/ai-lint
 al install all     # install into every supported tool at once
 ```
 

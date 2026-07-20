@@ -43,7 +43,7 @@ npx al
 ### Run without installing (recommended)
 
 ```bash
-npx ai-lint
+npx @itdest/ai-lint
 # or the short alias:
 npx al
 ```
@@ -51,7 +51,7 @@ npx al
 ### Global install
 
 ```bash
-npm install -g ai-lint
+npm install -g @itdest/ai-lint
 # then use anywhere:
 ai-lint
 al           # short alias
@@ -60,7 +60,7 @@ al           # short alias
 ### Local install
 
 ```bash
-npm install --save-dev ai-lint
+npm install --save-dev @itdest/ai-lint
 # add to package.json scripts:
 #   "lint:ai": "ai-lint --ci"
 ```
