@@ -3,6 +3,9 @@ import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { maxLength } from '../src/rules/max-length.js'
 import { noDuplicate } from '../src/rules/no-duplicate.js'
+import { noGlobalPathRule } from '../src/rules/no-global-path-rule.js'
+import { noMissingFrontmatter } from '../src/rules/no-missing-frontmatter.js'
+import { noStaleReference } from '../src/rules/no-stale-reference.js'
 import { noVerbose } from '../src/rules/no-verbose.js'
 
 const fixture = (name: string) =>
@@ -195,5 +198,170 @@ describe('max-length', () => {
 
     // 第 6 条规则的行号
     expect(issues[0].line).toBe(6)
+  })
+})
+
+// ============================================================
+// no-stale-reference
+// ============================================================
+
+describe('no-stale-reference', () => {
+  it('检测不存在的文件引用', () => {
+    const content = '- Reference to ./nonexistent/file.ts for config\n'
+    const issues = noStaleReference.check(content, 'test/CLAUDE.md')
+
+    expect(issues.length).toBeGreaterThan(0)
+    expect(issues[0].ruleId).toBe('no-stale-reference')
+    expect(issues[0].severity).toBe('warning')
+    expect(issues[0].fixable).toBe(false)
+  })
+
+  it('存在的文件引用不报告', () => {
+    const content = '- Reference to ./healthy-claude.md for examples\n'
+    const issues = noStaleReference.check(
+      content,
+      resolve(import.meta.dirname, 'fixtures/CLAUDE.md'),
+    )
+
+    for (const issue of issues) {
+      expect(issue.message).not.toContain('healthy-claude.md')
+    }
+  })
+
+  it('不存在的相对路径报告带行号', () => {
+    const content = '- Use config from ./missing-config.json\n'
+    const issues = noStaleReference.check(content, '/tmp/test.md')
+
+    expect(issues.length).toBeGreaterThan(0)
+    expect(issues[0].line).toBe(1)
+  })
+
+  it('跳过版本号（不当作文件路径）', () => {
+    const content = '- Use version v1.0.0 for the build\n'
+    const issues = noStaleReference.check(content, '/tmp/test.md')
+
+    const pathIssues = issues.filter((i) =>
+      i.message.includes('v1.0.0'),
+    )
+    expect(pathIssues).toHaveLength(0)
+  })
+
+  it('普通段落中的路径引用也检测', () => {
+    const content = 'The configuration is stored in ./nowhere-config.json on disk.\n'
+    const issues = noStaleReference.check(content, '/tmp/test.md')
+
+    expect(issues.length).toBeGreaterThan(0)
+    expect(issues[0].message).toContain('./nowhere-config.json')
+  })
+})
+
+// ============================================================
+// no-global-path-rule
+// ============================================================
+
+describe('no-global-path-rule', () => {
+  it('检测作用于特定目录的全局规则', () => {
+    const content = '- 在 src/components 目录中的所有组件必须添加单元测试\n'
+    const issues = noGlobalPathRule.check(content, 'CLAUDE.md')
+
+    expect(issues.length).toBeGreaterThan(0)
+    expect(issues[0].ruleId).toBe('no-global-path-rule')
+    expect(issues[0].fixable).toBe(false)
+  })
+
+  it('检测英文的路径限定规则', () => {
+    const cases = [
+      '- For the src/modules directory, all exports must be explicit',
+      '- Only in the lib folder should you use dynamic imports',
+      '- Specifically in src/routes, use lazy loading',
+      '- Applies to the components directory only',
+    ]
+
+    for (const c of cases) {
+      const issues = noGlobalPathRule.check(c, 'CLAUDE.md')
+      expect(issues.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('检测中文的路径限定表述', () => {
+    const cases = [
+      '- 针对 utils 目录下的所有文件使用具名导出',
+      '- 适用于 components 模块的组件必须包含 PropTypes',
+    ]
+
+    for (const c of cases) {
+      const issues = noGlobalPathRule.check(c, 'CLAUDE.md')
+      expect(issues.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('通用规则不报告', () => {
+    const content = '- Use TypeScript strict mode\n- Run tests before committing\n'
+    const issues = noGlobalPathRule.check(content, 'CLAUDE.md')
+
+    expect(issues).toHaveLength(0)
+  })
+})
+
+// ============================================================
+// no-missing-frontmatter
+// ============================================================
+
+describe('no-missing-frontmatter', () => {
+  it('检测缺失 frontmatter 的 SKILL.md', () => {
+    const content = '# My Skill\n\nSome instructions here.\n'
+    const issues = noMissingFrontmatter.check(content, 'skills/my-skill/SKILL.md')
+
+    expect(issues).toHaveLength(1)
+    expect(issues[0].ruleId).toBe('no-missing-frontmatter')
+    expect(issues[0].severity).toBe('error')
+    expect(issues[0].fixable).toBe(true)
+  })
+
+  it('检测缺失 description 的 frontmatter', () => {
+    const content = '---\nname: my-skill\n---\n# My Skill\n'
+    const issues = noMissingFrontmatter.check(content, 'skills/my-skill/SKILL.md')
+
+    expect(issues.length).toBeGreaterThan(0)
+    expect(issues[0].message).toContain('description')
+  })
+
+  it('完整 frontmatter 不报告', () => {
+    const content = fixture('skills/skill-a/SKILL.md')
+    const issues = noMissingFrontmatter.check(content, 'skills/skill-a/SKILL.md')
+
+    expect(issues).toHaveLength(0)
+  })
+
+  it('fix 为无 frontmatter 文件添加模板', () => {
+    const content = '# My Skill\n\nSome instructions.\n'
+    const issue = noMissingFrontmatter.check(content, 'skills/my-skill/SKILL.md')[0]
+
+    const fixed = noMissingFrontmatter.fix(content, issue)
+
+    expect(fixed).toContain('---')
+    expect(fixed).toContain('name:')
+    expect(fixed).toContain('description:')
+    expect(fixed).toContain('# My Skill')
+
+    // 修复后不应再检测到问题
+    const recheck = noMissingFrontmatter.check(fixed, 'skills/my-skill/SKILL.md')
+    expect(recheck).toHaveLength(0)
+  })
+
+  it('fix 为缺失 description 的前补字段', () => {
+    const content = '---\nname: my-skill\n---\n# Content\n'
+    const issue = noMissingFrontmatter.check(content, 'skills/my-skill/SKILL.md')[0]
+
+    const fixed = noMissingFrontmatter.fix(content, issue)
+
+    expect(fixed).toContain('description:')
+    const recheck = noMissingFrontmatter.check(fixed, 'skills/my-skill/SKILL.md')
+    expect(recheck).toHaveLength(0)
+  })
+
+  it('只对 SKILL.md 生效', () => {
+    // 此规则只检查 SKILL.md 文件
+    expect(noMissingFrontmatter.files).toEqual(['SKILL.md'])
   })
 })
