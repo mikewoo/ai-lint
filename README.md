@@ -3,7 +3,7 @@
 > The missing linter for AI prompt files. Like ESLint for JavaScript, but for your CLAUDE.md, rules, and skills.
 
 <p align="center">
-  <img alt="version" src="https://img.shields.io/badge/version-0.1.0-34D058">
+  <img alt="version" src="https://img.shields.io/badge/version-0.1.1-34D058">
   <img alt="license" src="https://img.shields.io/badge/license-MIT-34D058">
   <img alt="node" src="https://img.shields.io/badge/node-%3E%3D18-34D058">
 </p>

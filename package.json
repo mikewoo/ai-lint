@@ -1,6 +1,6 @@
 {
   "name": "@itdest/ai-lint",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "The missing linter for AI prompt files. Like ESLint for JavaScript, but for your CLAUDE.md, rules, and skills.",
   "type": "module",
   "bin": {
@@ -42,6 +42,7 @@
     "rules",
     "skills"
   ],
+  "readme": "README.md",
   "license": "MIT",
   "author": "mingming <ahqsgmm@gmail.com>",
   "repository": {
