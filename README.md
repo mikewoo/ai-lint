@@ -9,7 +9,7 @@
 </p>
 
 ```bash
-npx al
+npx @itdest/ai-lint
 ```
 
 ---
@@ -44,8 +44,6 @@ npx al
 
 ```bash
 npx @itdest/ai-lint
-# or the short alias:
-npx al
 ```
 
 ### Global install
@@ -71,19 +69,22 @@ npm install --save-dev @itdest/ai-lint
 
 ```bash
 # 1. Scan the current directory
-npx al
+npx @itdest/ai-lint
+
+# Or install globally for short aliases (al, ai-lint):
+npm install -g @itdest/ai-lint
+al        # short alias
+ai-lint   # full name
 
 # 2. See what's wrong with your AI configs
-#    (output shows file health scores + issues)
-
 # 3. Auto-fix what can be fixed
-npx al fix
+al fix
 
 # 4. Preview fixes before applying
-npx al fix --dry-run
+al fix --dry-run
 
 # 5. See your overall health at a glance
-npx al stats
+al stats
 ```
 
 ### Example Output
@@ -303,7 +304,7 @@ al install codex --global
 - **Skills** (Claude Code, Codex, OpenCode): Creates a `SKILL.md` the agent loads on demand
 - **Rules** (Qoder, Cursor, Windsurf, Gemini, Copilot): Appends a config quality directive
 
-**Verify:** Ask your AI agent "Check my config health" — it will run `npx al .`.
+**Verify:** Ask your AI agent "Check my config health" — it will run `npx @itdest/ai-lint .`.
 
 Full guide: [`integrations/README.md`](integrations/README.md)
 
@@ -413,7 +414,7 @@ Install ai-lint into your AI coding agent so it can check its own config files d
 | **Claude Code** | `cp integrations/claude-code/SKILL.md .claude/skills/ai-lint/` | Claude auto-checks config after edits |
 | **Codex CLI** | `cp integrations/codex/SKILL.md .codex/skills/ai-lint/` | Codex auto-checks config after edits |
 | **OpenCode** | `cp integrations/opencode/SKILL.md .opencode/skills/ai-lint/` | OpenCode auto-checks config after edits |
-| **Qoder** | `npx al init agents` | AGENTS.md includes config quality rule |
+| **Qoder** | `al init agents` | AGENTS.md includes config quality rule (after global install) |
 | **Cursor** | `cat integrations/cursor/.cursorrules >> .cursorrules` | Cursor checks config after edits |
 | **Windsurf** | `cat integrations/windsurf/.windsurfrules >> .windsurfrules` | Windsurf checks config after edits |
 | **Gemini CLI** | `cat integrations/gemini/GEMINI.md >> GEMINI.md` | Gemini checks config after edits |
@@ -440,7 +441,7 @@ Everyone is building config *managers*. Nobody is building config *doctors* — 
 ## Philosophy
 
 - **Read-only by default.** `ai-lint` scans and reports; `ai-lint fix` only touches what you ask it to.
-- **Zero config to start.** Run `npx al` with no setup.
+- **Zero config to start.** Run `npx @itdest/ai-lint` with no setup. After global install, use `al`.
 - **Fast.** Sub-second scans for typical project sizes.
 - **Zero network.** 100% local, no telemetry, no API calls.
 - **ESLint-compatible mental model.** If you've used ESLint, you already know ai-lint.

@@ -9,7 +9,7 @@
 </p>
 
 ```bash
-npx al
+npx @itdest/ai-lint
 ```
 
 ---
@@ -44,7 +44,7 @@ npx al
 ```bash
 npx @itdest/ai-lint
 # 或使用缩写：
-npx al
+npx @itdest/ai-lint
 ```
 
 ### 全局安装
@@ -70,25 +70,25 @@ npm install --save-dev @itdest/ai-lint
 
 ```bash
 # 1. 扫描当前目录
-npx al
+npx @itdest/ai-lint
 
 # 2. 查看 AI 配置有哪些问题
 #    （输出显示每个文件的健康分和问题列表）
 
 # 3. 自动修复可修复的问题
-npx al fix
+npx @itdest/ai-lint fix
 
 # 4. 预览修复效果（不写入磁盘）
-npx al fix --dry-run
+npx @itdest/ai-lint fix --dry-run
 
 # 5. 查看整体健康总览
-npx al stats
+npx @itdest/ai-lint stats
 ```
 
 ### 输出示例
 
 ```bash
-❯ npx al
+❯ npx @itdest/ai-lint
 
   CLAUDE.md  health: 62/100 ⚠️
 
@@ -296,7 +296,7 @@ al install all        # 全部 8 个工具
 al install codex --global  # 全局安装
 ```
 
-**验证：** 对 AI 说 "Check my config health" — 它会自动运行 `npx al .`。
+**验证：** 对 AI 说 "Check my config health" — 它会自动运行 `npx @itdest/ai-lint .`。
 
 完整指南：[`integrations/README.md`](integrations/README.md)
 
@@ -413,7 +413,7 @@ const single = runLint({
 ## 设计哲学
 
 - **默认只读。** `ai-lint` 只扫描报告；`ai-lint fix` 只改你让它改的。
-- **零配置起步。** `npx al` 直接跑，无需任何设置。
+- **零配置起步。** `npx @itdest/ai-lint` 直接跑，无需任何设置。
 - **快。** 常规项目亚秒级扫描。
 - **零网络。** 100% 本地运行，无遥测，无 API 调用。
 - **如果你用过 ESLint，你已经会用 ai-lint。** 心智模型完全一致。
