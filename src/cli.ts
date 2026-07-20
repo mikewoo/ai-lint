@@ -110,58 +110,141 @@ program
     console.log()
   })
 
-// ai-lint init [path]
+// ai-lint init [path] --type <name>
 program
   .command('init')
-  .description('generate a healthy CLAUDE.md template in the target directory')
+  .description('generate a healthy AI config template')
   .argument('[path]', 'directory to create the template in', process.cwd())
-  .action(async (initPath: string) => {
+  .option('--type <name>', 'template type: claude, agents, skill, design', 'claude')
+  .action(async (initPath: string, options: { type?: string }) => {
     const targetDir = resolve(initPath || process.cwd())
-    const targetFile = resolve(targetDir, 'CLAUDE.md')
+    const type = options.type || 'claude'
+    const { writeFileSync, mkdirSync } = await import('node:fs')
 
+    const templates: Record<string, { file: string; content: string }> = {
+      claude: {
+        file: 'CLAUDE.md',
+        content: [
+          '---',
+          'description: Project rules and conventions for AI assistants',
+          '---',
+          '',
+          '# Project Rules',
+          '',
+          '## Language & Types',
+          '- Use TypeScript strict mode for all new code',
+          '- Prefer `const` over `let`, avoid `var`',
+          '- Export all public APIs with explicit return types',
+          '',
+          '## Code Style',
+          '- Use tabs for indentation',
+          '- Maximum line length: 100 characters',
+          '- Always use semicolons',
+          '',
+          '## Testing',
+          '- Write unit tests for all new modules',
+          '- Run `npm test` before committing',
+          '- Maintain test coverage above 80%',
+          '',
+          '## Commits',
+          '- Follow conventional commits format',
+          '- Keep commits small and focused',
+          '- Reference issue numbers in commit messages',
+          '',
+          '## Dependencies',
+          '- Prefer built-in Node.js APIs over third-party packages',
+          '- Minimize production dependencies',
+          '- Pin dependency versions in package.json',
+        ].join('\n'),
+      },
+      agents: {
+        file: 'AGENTS.md',
+        content: [
+          '# Agent Rules',
+          '',
+          '## Behavior',
+          '- Always validate output before returning results',
+          '- If a task fails, retry with exponential backoff',
+          '- Report errors clearly with context, not just stack traces',
+          '',
+          '## Output',
+          '- Keep responses concise and actionable',
+          '- Use the project code style in all generated code',
+          '- Include reasoning for non-obvious decisions',
+          '',
+          '## Constraints',
+          '- Never modify files without explicit user confirmation',
+          '- Respect .gitignore when suggesting file operations',
+          '- Do not install packages without asking',
+        ].join('\n'),
+      },
+      skill: {
+        file: 'SKILL.md',
+        content: [
+          '---',
+          'name: my-skill',
+          'description: TODO: describe what this skill does in one sentence',
+          '---',
+          '',
+          '# Skill Title',
+          '',
+          'Brief overview of what this skill enables.',
+          '',
+          '## Instructions',
+          '- First instruction for this skill',
+          '- Second instruction with more detail',
+          '- Third instruction covering edge cases',
+          '',
+          '## Constraints',
+          '- Only apply this skill when relevant context is detected',
+          '- Respect existing project conventions',
+        ].join('\n'),
+      },
+      design: {
+        file: 'DESIGN.md',
+        content: [
+          '# Design System',
+          '',
+          '## Colors',
+          '- Primary: #000000',
+          '- Secondary: #666666',
+          '- Accent: (choose based on brand)',
+          '',
+          '## Typography',
+          '- Headings: system sans-serif, bold',
+          '- Body: system sans-serif, 16px',
+          '- Code: monospace, 14px',
+          '',
+          '## Spacing',
+          '- Base unit: 8px',
+          '- Padding: multiples of base unit',
+          '- Max content width: 1200px',
+          '',
+          '## Components',
+          '- Use consistent border-radius (4px)',
+          '- Shadows: use sparingly, only for elevation',
+          '- Keep components accessible (WCAG AA minimum)',
+        ].join('\n'),
+      },
+    }
+
+    const tpl = templates[type]
+    if (!tpl) {
+      console.log(`\n  Unknown template type: "${type}"\n`)
+      console.log(`  Available: ${Object.keys(templates).join(', ')}\n`)
+      process.exit(1)
+    }
+
+    const targetFile = resolve(targetDir, tpl.file)
     if (existsSync(targetFile)) {
-      console.log(`\n  CLAUDE.md already exists at ${targetDir}/\n`)
+      console.log(`\n  ${tpl.file} already exists at ${targetDir}/\n`)
       console.log('  Use ai-lint to scan it instead.\n')
       process.exit(1)
     }
 
-    const template = [
-      '---',
-      'description: Project rules and conventions for AI assistants',
-      '---',
-      '',
-      '# Project Rules',
-      '',
-      '## Language & Types',
-      '- Use TypeScript strict mode for all new code',
-      '- Prefer `const` over `let`, avoid `var`',
-      '- Export all public APIs with explicit return types',
-      '',
-      '## Code Style',
-      '- Use tabs for indentation',
-      '- Maximum line length: 100 characters',
-      '- Always use semicolons',
-      '',
-      '## Testing',
-      '- Write unit tests for all new modules',
-      '- Run `npm test` before committing',
-      '- Maintain test coverage above 80%',
-      '',
-      '## Commits',
-      '- Follow conventional commits format',
-      '- Keep commits small and focused',
-      '- Reference issue numbers in commit messages',
-      '',
-      '## Dependencies',
-      '- Prefer built-in Node.js APIs over third-party packages',
-      '- Minimize production dependencies',
-      '- Pin dependency versions in package.json',
-    ].join('\n')
-
-    const { writeFileSync, mkdirSync } = await import('node:fs')
     try {
       mkdirSync(targetDir, { recursive: true })
-      writeFileSync(targetFile, template, 'utf-8')
+      writeFileSync(targetFile, tpl.content, 'utf-8')
       console.log(`\n  ✅ Created ${targetFile}\n`)
       console.log(`  Run ${chalk.bold('ai-lint')} to verify it's healthy.\n`)
     } catch (err) {
