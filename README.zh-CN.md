@@ -3,9 +3,9 @@
 > 像 ESLint 检查 JavaScript 一样，检查你的 AI 编程配置是否健康。
 
 <p align="center">
-  <img alt="npm" src="https://img.shields.io/npm/v/ai-lint?color=34D058&label=npm">
-  <img alt="license" src="https://img.shields.io/npm/l/ai-lint?color=34D058">
-  <img alt="node" src="https://img.shields.io/node/v/ai-lint?color=34D058">
+  <img alt="version" src="https://img.shields.io/badge/version-0.1.0-34D058">
+  <img alt="license" src="https://img.shields.io/badge/license-MIT-34D058">
+  <img alt="node" src="https://img.shields.io/badge/node-%3E%3D18-34D058">
 </p>
 
 ```bash
