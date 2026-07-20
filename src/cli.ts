@@ -1,8 +1,9 @@
 #! /usr/bin/env node
 import { Command } from 'commander'
 import chalk from 'chalk'
-import { runCrossFiles, runLint, runFix } from './engine.js'
+import type { LintResult } from './report/render.js'
 import { render, renderJson } from './report/render.js'
+import { runCrossFiles, runLint, runFix } from './engine.js'
 
 const program = new Command()
 
@@ -13,19 +14,23 @@ program
   .argument('[path]', 'directory to scan', process.cwd())
   .option('--ci', 'exit with code 1 if any issues found')
   .option('--json', 'output results as JSON')
+  .option('--no-color', 'disable colored output (useful in CI)')
   .option('--cross-files', 'enable cross-file detection')
-  .action((scanPath: string, options: { ci?: boolean; json?: boolean; crossFiles?: boolean }) => {
+  .action((scanPath: string, options: { ci?: boolean; json?: boolean; noColor?: boolean; crossFiles?: boolean }) => {
     const cwd = scanPath || process.cwd()
+
+    if (options.noColor) {
+      chalk.level = 0
+    }
 
     const result = runLint({ cwd })
     const crossResult = options.crossFiles ? runCrossFiles({ cwd }) : null
 
     if (options.json) {
-      if (crossResult) {
-        console.log(renderJson(crossResult))
-      } else {
-        console.log(renderJson(result))
-      }
+      const jsonOutput = crossResult
+        ? { ...crossResult, crossFiles: crossResult.files[0]?.issues || [] }
+        : result
+      console.log(renderJson(jsonOutput as LintResult))
     } else {
       console.log(render(result, cwd))
       if (crossResult && crossResult.files[0]?.issues.length > 0) {
@@ -79,10 +84,9 @@ program
   .command('explain')
   .description('explain a specific rule in detail')
   .argument('<rule-id>', 'rule ID to explain')
-  .action((ruleId: string) => {
-    // 懒加载规则注册表来获取描述
-    const { rules } = require('./rules/registry.js')
-    const rule = rules.find((r: { id: string; description: string; files: string[] }) => r.id === ruleId)
+  .action(async (ruleId: string) => {
+    const { rules } = await import('./rules/registry.js')
+    const rule = rules.find((r) => r.id === ruleId)
 
     if (!rule) {
       console.log(`\n  Unknown rule: "${ruleId}"\n`)
