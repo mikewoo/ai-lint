@@ -45,7 +45,7 @@ const EXCLUDE_PATTERNS = [
 export const noNullEffect = {
   id: 'no-null-effect' as const,
   description: 'Detect constraints that produce no observable behavioral change (platitudes, vague directives)',
-  files: ['CLAUDE.md', 'AGENTS.md', 'SKILL.md', '.cursorrules', '.windsurfrules', 'GEMINI.md', 'copilot-instructions.md'],
+  files: ['CLAUDE.md', 'AGENTS.md'],
 
   check(content: string, filePath: string): LintIssue[] {
     const rules = parseRules(content)

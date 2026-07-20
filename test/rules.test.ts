@@ -385,7 +385,7 @@ describe('no-semantic-duplicate', () => {
 
     expect(issues.length).toBeGreaterThan(0)
     expect(issues[0].ruleId).toBe('no-semantic-duplicate')
-    expect(issues[0].fixable).toBe(false)
+    expect(issues[0].fixable).toBe(true)
   })
 
   it('identical rules are not reported (left to no-duplicate)', () => {

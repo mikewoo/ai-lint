@@ -51,7 +51,7 @@ const FILE_SCOPE_MAP: Record<string, string[]> = {
 export const noGlobalPathRule = {
   id: 'no-global-path-rule' as const,
   description: 'Detect path-scoped rules written as global (applied to every directory unnecessarily)',
-  files: ['CLAUDE.md', 'AGENTS.md', 'SKILL.md', '.cursorrules', '.windsurfrules', 'GEMINI.md', 'copilot-instructions.md'],
+  files: ['CLAUDE.md', 'AGENTS.md'],
 
   check(content: string, filePath: string): LintIssue[] {
     const rules = parseRules(content)

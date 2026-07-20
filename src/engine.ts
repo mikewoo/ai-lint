@@ -1,7 +1,8 @@
-import { readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { basename, resolve } from 'node:path'
 import { detectCrossFileConflicts } from './cross-files/conflict.js'
 import { detectSkillOverlap, type SkillInfo } from './cross-files/skill-overlap.js'
-import { findFiles, shortPath } from './discovery/find-files.js'
+import { findFiles, shortPath, type FoundFile } from './discovery/find-files.js'
 import { parseFrontmatter } from './parser/frontmatter.js'
 import type { FileResult, LintResult } from './report/render.js'
 import { summarize } from './report/render.js'
@@ -10,6 +11,10 @@ import { getFixer, lintFile } from './rules/registry.js'
 export interface LintOptions {
   /** Scan root directory */
   cwd?: string
+  /** Specific file to scan (overrides directory discovery) */
+  targetFile?: string
+  /** Comma-separated rule IDs to limit detection to */
+  rulesFilter?: string
   /** Whether to auto-fix */
   fix?: boolean
   /** --dry-run: preview fixes, don't write to disk */
@@ -36,13 +41,35 @@ export interface FixReport {
  */
 export function runLint(options: LintOptions = {}): LintResult {
   const cwd = options.cwd || process.cwd()
-  const files = findFiles(cwd)
+  let files: FoundFile[]
+
+  if (options.targetFile) {
+    // Single-file mode: scan a specific file
+    const targetPath = resolve(cwd, options.targetFile)
+    if (!existsSync(targetPath)) {
+      return { files: [], errors: 0, warnings: 0, fixable: 0 }
+    }
+    const name = basename(targetPath)
+    const isSkill = name === 'SKILL.md'
+    files = [{ path: targetPath, name, type: isSkill ? 'skill' : 'config' }]
+  } else {
+    files = findFiles(cwd)
+  }
+
+  const filterIds = options.rulesFilter
+    ? new Set(options.rulesFilter.split(',').map((s) => s.trim()).filter(Boolean))
+    : null
 
   const fileResults: FileResult[] = []
 
   for (const file of files) {
     const content = readFileSync(file.path, 'utf-8')
-    const issues = lintFile(content, file.path, file.name)
+    let issues = lintFile(content, file.path, file.name)
+
+    // Apply rule filter if specified
+    if (filterIds) {
+      issues = issues.filter((i) => filterIds.has(i.ruleId))
+    }
 
     fileResults.push({ file, issues })
   }
@@ -57,7 +84,24 @@ export function runLint(options: LintOptions = {}): LintResult {
  */
 export function runFix(options: LintOptions = {}): FixReport {
   const cwd = options.cwd || process.cwd()
-  const files = findFiles(cwd)
+  let files: FoundFile[]
+
+  if (options.targetFile) {
+    const targetPath = resolve(cwd, options.targetFile)
+    if (!existsSync(targetPath)) {
+      return { result: { files: [], errors: 0, warnings: 0, fixable: 0 }, fixed: 0, details: [] }
+    }
+    const name = basename(targetPath)
+    const isSkill = name === 'SKILL.md'
+    files = [{ path: targetPath, name, type: isSkill ? 'skill' : 'config' }]
+  } else {
+    files = findFiles(cwd)
+  }
+
+  const filterIds = options.rulesFilter
+    ? new Set(options.rulesFilter.split(',').map((s) => s.trim()).filter(Boolean))
+    : null
+
   let fixedCount = 0
   const fixDetails: FixDetail[] = []
   const fileResults: FileResult[] = []
@@ -68,7 +112,12 @@ export function runFix(options: LintOptions = {}): FixReport {
     let fileFixed = 0
 
     // First detect all issues
-    const allIssues = lintFile(content, file.path, file.name)
+    let allIssues = lintFile(content, file.path, file.name)
+
+    // Apply rule filter if specified
+    if (filterIds) {
+      allIssues = allIssues.filter((i) => filterIds.has(i.ruleId))
+    }
 
     // Only handle fixable issues
     const fixable = allIssues.filter((i) => i.fixable)

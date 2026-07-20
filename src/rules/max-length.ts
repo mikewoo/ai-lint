@@ -10,7 +10,7 @@ const AVG_RULE_TOKENS = 8
 export const maxLength = {
   id: 'max-length' as const,
   description: 'Detect config files with excessive rule count (token bloat risk)',
-  files: ['CLAUDE.md', 'AGENTS.md', 'SKILL.md', '.cursorrules', '.windsurfrules', 'GEMINI.md', 'copilot-instructions.md'],
+  files: ['CLAUDE.md', 'AGENTS.md'],
 
   check(
     content: string,

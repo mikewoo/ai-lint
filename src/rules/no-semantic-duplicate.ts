@@ -33,13 +33,24 @@ export const noSemanticDuplicate = {
             file: filePath,
             line: rules[j].line,
             message: `"${truncate(rules[i].text, 40)}" is semantically similar to (line ${rules[i].line}) "${truncate(rules[j].text, 40)}" (${Math.round(sim * 100)}%)`,
-            fixable: false,
+            fixable: true,
           })
         }
       }
     }
 
     return issues
+  },
+
+  fix(content: string, issue: LintIssue): string {
+    // Remove the later (shorter) occurrence, keeping the earlier one
+    if (!issue.line) return content
+    const lines = content.split('\n')
+    const targetIdx = issue.line - 1
+    if (targetIdx >= 0 && targetIdx < lines.length) {
+      lines.splice(targetIdx, 1)
+    }
+    return lines.join('\n')
   },
 }
 

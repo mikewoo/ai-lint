@@ -80,7 +80,7 @@ const TECH_INDICATORS: Array<{
 export const noOverconstrain = {
   id: 'no-overconstrain' as const,
   description: 'Detect rules that constrain contexts where they may not apply (tech stack mismatch)',
-  files: ['CLAUDE.md', 'AGENTS.md', 'SKILL.md'],
+  files: ['CLAUDE.md', 'AGENTS.md', '.cursorrules', '.windsurfrules', 'GEMINI.md', 'copilot-instructions.md'],
 
   check(content: string, filePath: string): LintIssue[] {
     const rules = parseRules(content)
