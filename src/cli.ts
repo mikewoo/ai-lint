@@ -119,10 +119,10 @@ program
   .command('init')
   .description('generate a healthy AI config template')
   .argument('[path]', 'directory to create the template in', process.cwd())
-  .option('-t, --type <name>', 'template type: claude, agents, skill, design')
+  .option('-t, --type <name>', 'template type: claude, agents, agent, skill, design')
   .action(async (initPath: string, options: { type?: string }) => {
     // Resolve type: if the path argument is one of the template names, treat it as the type
-    const templateNames = ['claude', 'agents', 'skill', 'design']
+    const templateNames = ['claude', 'agents', 'agent', 'skill', 'design']
     let type = options.type || 'claude'
     let targetDir = resolve(initPath || process.cwd())
 
@@ -171,6 +171,27 @@ program
       },
       agents: {
         file: 'AGENTS.md',
+        content: [
+          '# Agent Rules',
+          '',
+          '## Behavior',
+          '- Always validate output before returning results',
+          '- If a task fails, retry with exponential backoff',
+          '- Report errors clearly with context, not just stack traces',
+          '',
+          '## Output',
+          '- Keep responses concise and actionable',
+          '- Use the project code style in all generated code',
+          '- Include reasoning for non-obvious decisions',
+          '',
+          '## Constraints',
+          '- Never modify files without explicit user confirmation',
+          '- Respect .gitignore when suggesting file operations',
+          '- Do not install packages without asking',
+        ].join('\n'),
+      },
+      agent: {
+        file: 'Agent.md',
         content: [
           '# Agent Rules',
           '',
