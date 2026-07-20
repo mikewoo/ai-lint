@@ -123,7 +123,7 @@ export function renderJson(result: LintResult): string {
  * - Each warning: -5
  * - Minimum 0
  */
-function calcHealth(issues: LintIssue[]): number {
+export function calcHealth(issues: LintIssue[]): number {
   let score = 100
   for (const issue of issues) {
     score -= issue.severity === 'error' ? 15 : 5

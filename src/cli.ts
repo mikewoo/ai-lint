@@ -4,7 +4,7 @@ import { dirname, resolve } from 'node:path'
 import chalk from 'chalk'
 import { Command } from 'commander'
 import type { LintResult } from './report/render.js'
-import { render, renderJson } from './report/render.js'
+import { calcHealth, render, renderJson } from './report/render.js'
 import { runCrossFiles, runFix, runLint } from './engine.js'
 
 const program = new Command()
@@ -62,11 +62,15 @@ program
 program
   .command('fix')
   .description('auto-fix lint issues where possible')
-  .argument('[path]', 'directory to scan', process.cwd())
+  .argument('[path]', 'directory or file to fix', process.cwd())
   .option('--dry-run', 'preview fixes without writing to disk')
-  .action((fixPath: string, options: { dryRun?: boolean }) => {
-    const cwd = fixPath || process.cwd()
-    const { result, fixed, details } = runFix({ cwd, fix: true, dryRun: options.dryRun })
+  .option('--rules <ids>', 'comma-separated rule IDs to limit fixing to')
+  .action((fixPath: string, options: { dryRun?: boolean; rules?: string }) => {
+    const resolvedPath = resolve(fixPath || process.cwd())
+    const isFile = existsSync(resolvedPath) && statSync(resolvedPath).isFile()
+    const cwd = isFile ? dirname(resolvedPath) : resolvedPath
+    const targetFile = isFile ? resolvedPath : undefined
+    const { result, fixed, details } = runFix({ cwd, targetFile, rulesFilter: options.rules, dryRun: options.dryRun })
 
     // Display per-item fix details
     for (const d of details) {
@@ -286,7 +290,7 @@ program
         ? file.path.split('/').slice(-2).join('/').padEnd(28)
         : file.name.padEnd(28)
 
-      const score = Math.max(0, 100 - issues.filter((i) => i.severity === 'error').length * 15 - issues.filter((i) => i.severity === 'warning').length * 5)
+      const score = calcHealth(issues)
       scores.push(score)
 
       const status = score >= 90 ? chalk.green('✅ OK') : score >= 60 ? chalk.yellow('⚠️  warn') : chalk.red('❌ poor')
