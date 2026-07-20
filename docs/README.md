@@ -1,40 +1,58 @@
-# ai-lint 项目文档
+# ai-lint Project Documentation
 
-> 像 ESLint 检查代码一样，检查你的 AI 编程配置是否健康。
+> Like ESLint checks your JavaScript, ai-lint checks your AI coding configuration health.
 
 ---
 
-## 文档索引
+## Documentation Index
 
-| # | 文档 | 核心内容 |
+| # | Document | Core Content |
 |---|------|---------|
-| 01 | [项目立项书](./01-项目立项书.md) | 定位、对标 ESLint、不做什么、护城河 |
-| 02 | [需求分析说明书](./02-需求分析说明书.md) | 12 条检测规则 × 7 种文件类型、CLI 命令 |
-| 03 | [技术架构文档](./03-技术架构文档.md) | 架构图、4 个依赖、Rule 接口、Parser 设计 |
-| 04 | [研发计划](./04-研发计划.md) | 2 周 10 天每日任务 |
-| 05 | [调研报告汇总](./05-调研报告汇总.md) | 6 条流合并结论、证伪验证 |
+| 01 | [Project Charter](./01-project-charter.md) | Positioning, ESLint analogy, scope boundaries, competitive moat |
+| 02 | [Requirements Specification](./02-requirements-spec.md) | 12 detection rules x 10 file types, CLI command design |
+| 03 | [Technical Architecture](./03-technical-architecture.md) | Architecture diagram, 4 production dependencies, Rule interface, Parser design |
+| 04 | [Development Plan](./04-development-plan.md) | 2-week / 10-day retrospective |
+| 05 | [Research Report Summary](./05-research-report.md) | 6-stream merged findings, falsification validation |
 
 ---
 
-## 一句话产品描述
+## One-Line Product Description
 
-> **`npx ai-lint`** — 扫描你的 CLAUDE.md / AGENTS.md / SKILL.md / .cursorrules，检测冗余规则、冲突指令、Token 浪费模式，自动修复。
+> **`npx ai-lint`** — Scans your CLAUDE.md / AGENTS.md / SKILL.md / .cursorrules for duplicate rules, conflicting instructions, and token-waste patterns. Auto-fixes what it can.
 
-## 关键数据
+## Key Data Points
 
-| 数据 | 数值 | 来源 |
+| Data Point | Value | Source |
 |------|------|------|
-| 竞品全景 | 57 个 | 流 A |
-| 直接竞品（配置质量检测） | **0 个** | 流 A |
-| 真实需求信号 | 22 条 | 流 B |
-| Top 痛点 | CLAUDE.md 膨胀（94%→71% 遵守率） | 流 B |
-| 证伪通过率（新方向） | **0/7** | 流 F |
-| MVP 工期 | 2 周 | 04-研发计划 |
-| 生产依赖 | 4 个 | 03-技术架构 |
+| Competitor landscape | 57 tools | Stream A |
+| Direct competitors (config quality detection) | **0** | Stream A |
+| Real demand signals | 22 | Stream B |
+| Top pain point | CLAUDE.md bloat (94%→71% compliance rate) | Stream B |
+| Falsification pass rate (this direction) | **0/7** | Stream F |
+| MVP timeline | 2 weeks | 04-Development Plan |
+| Production dependencies | 4 | 03-Technical Architecture |
+| Config file types supported | 8 | 02-Requirements Specification |
+| Detection rules | 12 | 02-Requirements Specification |
 
-## 同类参照
+## Comparison: ESLint vs ai-lint
 
 ```
-ESLint → JavaScript 代码质量
-ai-lint → AI 配置健康度
+ESLint  → JavaScript code quality (static analysis → lint → fix)
+ai-lint → AI config health     (static analysis → scan → fix)
 ```
+
+| Dimension | ESLint | ai-lint |
+|-----------|--------|---------|
+| Domain | JavaScript / TypeScript source code | AI prompt & config files (Markdown) |
+| Detects | Syntax errors, style issues, logic bugs | Duplicate rules, conflicts, verbose phrasing, token bloat |
+| Auto-fix | ✅ | ✅ (`ai-lint fix`) |
+| Extensible rules | ✅ Plugin system | ✅ Rule interface (planned) |
+| CI integration | ✅ | ✅ (`ai-lint --ci`) |
+| Zero-config start | ❌ (needs config file) | ✅ (`npx al` with no setup) |
+| Network required | ❌ (local only) | ❌ (100% local, no telemetry) |
+
+## Project Links
+
+- **Main README** — [`../README.md`](../README.md): Installation, command reference, all detection rules, integrations overview
+- **Integrations Guide** — [`../integrations/README.md`](../integrations/README.md): Installing ai-lint into Claude Code, Codex CLI, OpenCode, Qoder, Cursor, Windsurf, Gemini CLI, and GitHub Copilot
+- **中文 README** — [`../README.zh-CN.md`](../README.zh-CN.md): Chinese-language version of the main README
