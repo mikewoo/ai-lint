@@ -164,6 +164,10 @@ program
           '## Commit Guidelines',
           '- Follow conventional commits format',
           '- Keep commits small and focused',
+          '',
+          '## Config Quality',
+          '- After editing any config file, run `npx al .` to check for issues',
+          '- Run `npx al fix --dry-run` before committing config changes',
         ].join('\n'),
       },
       agents: {
@@ -202,6 +206,10 @@ program
           '- Follow conventional commits',
           '- Keep PRs under 400 lines diff',
           '- Include test evidence in PR description',
+          '',
+          '## Config Quality',
+          '- After editing any config file, run `npx al .` to check for issues',
+          '- Run `npx al fix --dry-run` before committing config changes',
         ].join('\n'),
       },
       skill: {
