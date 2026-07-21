@@ -42,11 +42,11 @@ export function render(result: LintResult, _rootDir: string): string {
     const healthIcon = health >= 90 ? '✅' : health >= 60 ? '⚠️' : '❌'
 
     // File header
-    const displayName = file.type === 'skill'
-      ? file.path.split('/').slice(-2).join('/')
-      : file.name
+    const displayName = file.type === 'skill' ? file.path.split('/').slice(-2).join('/') : file.name
 
-    lines.push(`  ${chalk.bold(displayName)}  ${healthColor(`health: ${health}/100`)} ${healthIcon}`)
+    lines.push(
+      `  ${chalk.bold(displayName)}  ${healthColor(`health: ${health}/100`)} ${healthIcon}`,
+    )
 
     if (issues.length === 0) {
       lines.push(chalk.dim('    No issues found'))
@@ -66,9 +66,7 @@ export function render(result: LintResult, _rootDir: string): string {
       const color = SEVERITY_COLOR[issue.severity]
       const ruleId = chalk.dim(issue.ruleId)
       const lineInfo = issue.line ? chalk.dim(`:${issue.line}`) : ''
-      const tokenInfo = issue.tokenWaste
-        ? chalk.dim(`  (~${issue.tokenWaste} tokens)`)
-        : ''
+      const tokenInfo = issue.tokenWaste ? chalk.dim(`  (~${issue.tokenWaste} tokens)`) : ''
 
       lines.push(`  ${color(`${icon} ${ruleId}`)}${lineInfo}  ${issue.message}${tokenInfo}`)
     }
@@ -78,15 +76,23 @@ export function render(result: LintResult, _rootDir: string): string {
 
   // Summary
   const summaryParts: string[] = []
-  if (result.errors > 0) summaryParts.push(chalk.red(`${result.errors} error${result.errors > 1 ? 's' : ''}`))
-  if (result.warnings > 0) summaryParts.push(chalk.yellow(`${result.warnings} warning${result.warnings > 1 ? 's' : ''}`))
+  if (result.errors > 0)
+    summaryParts.push(chalk.red(`${result.errors} error${result.errors > 1 ? 's' : ''}`))
+  if (result.warnings > 0)
+    summaryParts.push(chalk.yellow(`${result.warnings} warning${result.warnings > 1 ? 's' : ''}`))
   if (result.fixable > 0) summaryParts.push(chalk.dim(`${result.fixable} fixable`))
 
   const fileWord = result.files.length === 1 ? 'file' : 'files'
-  lines.push(`  ${chalk.bold('■')} ${result.files.length} ${fileWord} scanned, ${summaryParts.join(', ')}`)
+  lines.push(
+    `  ${chalk.bold('■')} ${result.files.length} ${fileWord} scanned, ${summaryParts.join(', ')}`,
+  )
 
   if (result.fixable > 0) {
-    lines.push(chalk.dim(`\n  💡 Run ${chalk.bold('ai-lint fix')} to auto-fix ${result.fixable} issue${result.fixable > 1 ? 's' : ''}`))
+    lines.push(
+      chalk.dim(
+        `\n  💡 Run ${chalk.bold('ai-lint fix')} to auto-fix ${result.fixable} issue${result.fixable > 1 ? 's' : ''}`,
+      ),
+    )
   }
 
   lines.push('')
@@ -113,7 +119,14 @@ export function renderJson(result: LintResult): string {
     })),
   }))
 
-  return JSON.stringify({ files: output, summary: { errors: result.errors, warnings: result.warnings, fixable: result.fixable } }, null, 2)
+  return JSON.stringify(
+    {
+      files: output,
+      summary: { errors: result.errors, warnings: result.warnings, fixable: result.fixable },
+    },
+    null,
+    2,
+  )
 }
 
 /**

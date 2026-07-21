@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs'
 import { dirname, relative, resolve } from 'node:path'
-import type { LintIssue } from '../types.js'
 import { parseRules } from '../parser/markdown.js'
+import type { LintIssue } from '../types.js'
 
 /**
  * Patterns for matching file path references:
@@ -16,7 +16,15 @@ const ABS_PATH_RE = /`?(\/[a-zA-Z0-9._/-]+\.[\w]+)`?/g
 export const noStaleReference = {
   id: 'no-stale-reference' as const,
   description: 'Detect references to files or paths that no longer exist',
-  files: ['CLAUDE.md', 'AGENTS.md', 'SKILL.md', '.cursorrules', '.windsurfrules', 'GEMINI.md', 'copilot-instructions.md'],
+  files: [
+    'CLAUDE.md',
+    'AGENTS.md',
+    'SKILL.md',
+    '.cursorrules',
+    '.windsurfrules',
+    'GEMINI.md',
+    'copilot-instructions.md',
+  ],
 
   check(content: string, filePath: string): LintIssue[] {
     const baseDir = dirname(resolve(filePath))
@@ -95,7 +103,9 @@ function extractPaths(text: string): string[] {
     if (/^(?:https?:)?\/\//.test(p)) continue
     if (!seen.has(p)) {
       seen.add(p)
-      relativePaths.push({ path: p, start: match.index!, end: match.index! + match[0].length })
+      // matchAll always yields a defined index; ?? 0 satisfies the type checker
+      const start = match.index ?? 0
+      relativePaths.push({ path: p, start, end: start + match[0].length })
     }
   }
 
@@ -105,11 +115,9 @@ function extractPaths(text: string): string[] {
   ABS_PATH_RE.lastIndex = 0
   for (const match of text.matchAll(ABS_PATH_RE)) {
     const p = match[1]
-    const absStart = match.index!
+    const absStart = match.index ?? 0
     // Skip positions already covered by relative path matches (e.g. /healthy-claude.md spuriously extracted from ./healthy-claude.md)
-    const overlapped = relativePaths.some(
-      (r) => absStart >= r.start && absStart < r.end,
-    )
+    const overlapped = relativePaths.some((r) => absStart >= r.start && absStart < r.end)
     if (overlapped) continue
     // Skip URLs
     if (/^(?:https?:)?\/\//.test(p)) continue

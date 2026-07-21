@@ -1,6 +1,6 @@
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { runLint } from '../src/engine.js'
 
@@ -92,10 +92,7 @@ describe('performance', () => {
   it('single file scan is very fast', () => {
     // Simple project with only a single CLAUDE.md
     const singleDir = mkdtempSync(join(tmpdir(), 'ai-lint-perf-single-'))
-    writeFileSync(
-      join(singleDir, 'CLAUDE.md'),
-      generateClaudeMd(20),
-    )
+    writeFileSync(join(singleDir, 'CLAUDE.md'), generateClaudeMd(20))
 
     const start = performance.now()
     runLint({ cwd: singleDir })

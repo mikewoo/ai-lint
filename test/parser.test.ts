@@ -23,8 +23,8 @@ describe('parseRules', () => {
     const content = fixture('healthy-claude.md')
     const rules = parseRules(content)
 
-    const hasHeadings = rules.some((r) =>
-      r.text.includes('Project Rules') || r.text.includes('Coding Standards'),
+    const hasHeadings = rules.some(
+      (r) => r.text.includes('Project Rules') || r.text.includes('Coding Standards'),
     )
     expect(hasHeadings).toBe(false)
   })
@@ -66,9 +66,7 @@ describe('parseRules', () => {
     const rules = parseRules(content)
 
     const texts = rules.map((r) => r.text.toLowerCase())
-    const duplicates = texts.filter(
-      (t, i) => texts.indexOf(t) !== i,
-    )
+    const duplicates = texts.filter((t, i) => texts.indexOf(t) !== i)
 
     expect(duplicates.length).toBeGreaterThan(0)
     expect(duplicates).toContain('use typescript strict mode')
@@ -141,6 +139,65 @@ describe('parseRules', () => {
     expect(rules).toHaveLength(2)
     expect(rules[0].text).toBe('Always use TypeScript for new files.')
     expect(rules[1].text).toBe('Never commit directly to main branch.')
+  })
+
+  it('merges a wrapped standalone rule into one entry', () => {
+    const content = [
+      'Use tabs for indentation everywhere in this',
+      'project and never mix tabs with spaces at all.',
+    ].join('\n')
+
+    const rules = parseRules(content)
+
+    expect(rules).toHaveLength(1)
+    expect(rules[0].text).toBe(
+      'Use tabs for indentation everywhere in this project and never mix tabs with spaces at all.',
+    )
+    // Line number anchors to the first line of the wrapped rule
+    expect(rules[0].line).toBe(1)
+  })
+
+  it('does not merge two separate uppercase-led rules', () => {
+    const content = [
+      'Always use TypeScript for new files.',
+      'Never commit directly to main branch.',
+    ].join('\n')
+
+    const rules = parseRules(content)
+
+    expect(rules).toHaveLength(2)
+  })
+
+  it('does not merge two separate CJK rules', () => {
+    const content = ['必须使用双引号包裹字符串', '必须使用两个空格进行缩进'].join('\n')
+
+    const rules = parseRules(content)
+
+    expect(rules).toHaveLength(2)
+  })
+
+  it('stops merging after sentence-ending punctuation', () => {
+    const content = [
+      'Always enable strict mode in the compiler.',
+      'linting runs on every commit in this project.',
+    ].join('\n')
+
+    const rules = parseRules(content)
+
+    // First line ends a sentence, so the lowercase second line is NOT merged;
+    // the second line starts lowercase so it is not rule-like on its own.
+    expect(rules).toHaveLength(1)
+    expect(rules[0].text).toBe('Always enable strict mode in the compiler.')
+  })
+
+  it('extracts rules from blockquotes, stripping the marker', () => {
+    const content = ['> Always validate user input before processing it.'].join('\n')
+
+    const rules = parseRules(content)
+
+    expect(rules).toHaveLength(1)
+    expect(rules[0].text).toBe('Always validate user input before processing it.')
+    expect(rules[0].text).not.toContain('>')
   })
 })
 

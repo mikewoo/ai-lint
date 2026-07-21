@@ -1,5 +1,5 @@
-import type { LintIssue } from '../types.js'
 import { parseRules } from '../parser/markdown.js'
+import type { LintIssue } from '../types.js'
 
 /** Default max rule count */
 const DEFAULT_MAX_RULES = 20

@@ -1,5 +1,5 @@
-import type { LintIssue } from '../types.js'
 import { noConflict } from '../rules/no-conflict.js'
+import type { LintIssue } from '../types.js'
 
 export interface FileContent {
   path: string

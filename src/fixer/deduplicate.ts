@@ -1,5 +1,5 @@
-import type { LintIssue } from '../types.js'
 import { parseRules } from '../parser/markdown.js'
+import type { LintIssue } from '../types.js'
 
 /**
  * Smart deduplication: when duplicate rules are found, keep the more complete version and delete the shorter one.
@@ -21,8 +21,8 @@ export function deduplicateContent(content: string, issue: LintIssue): string {
   const lines = content.split('\n')
   const rules = parseRules(content)
 
-  // Find all duplicates related to the issue
-  const targetLine = issue.line!
+  // Find all duplicates related to the issue (0 fails the > 0 guards below)
+  const targetLine = issue.line ?? 0
   const targetRule = rules.find((r) => r.line === targetLine)
   if (!targetRule) {
     // Fallback: delete the line directly
@@ -35,9 +35,7 @@ export function deduplicateContent(content: string, issue: LintIssue): string {
   const normalized = targetRule.text.trim().toLowerCase()
 
   // Find all rules with the same normalized text
-  const duplicates = rules.filter(
-    (r) => r.text.trim().toLowerCase() === normalized,
-  )
+  const duplicates = rules.filter((r) => r.text.trim().toLowerCase() === normalized)
 
   if (duplicates.length < 2) {
     // No real duplicates found
@@ -48,14 +46,10 @@ export function deduplicateContent(content: string, issue: LintIssue): string {
   }
 
   // Find the longest version (keep this one)
-  const longest = duplicates.reduce((a, b) =>
-    a.text.length >= b.text.length ? a : b,
-  )
+  const longest = duplicates.reduce((a, b) => (a.text.length >= b.text.length ? a : b))
 
   // Remove all shorter versions (from back to front to avoid line number shifting)
-  const toRemove = duplicates
-    .filter((d) => d.line !== longest.line)
-    .sort((a, b) => b.line - a.line)
+  const toRemove = duplicates.filter((d) => d.line !== longest.line).sort((a, b) => b.line - a.line)
 
   for (const dup of toRemove) {
     if (dup.line > 0 && dup.line <= lines.length) {

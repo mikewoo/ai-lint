@@ -1,7 +1,7 @@
-import { estimateTokens } from '../utils.js'
-import type { LintIssue } from '../types.js'
 import { simplifyText } from '../fixer/simplify.js'
 import { parseRules } from '../parser/markdown.js'
+import type { LintIssue } from '../types.js'
+import { estimateTokens } from '../utils.js'
 
 /**
  * Verbose phrasing patterns — [pattern, replacement, englishPattern?]
@@ -96,7 +96,15 @@ const MIN_TOKEN_SAVINGS = 3
 export const noVerbose = {
   id: 'no-verbose' as const,
   description: 'Detect overly verbose phrasing that wastes tokens',
-  files: ['CLAUDE.md', 'AGENTS.md', 'SKILL.md', '.cursorrules', '.windsurfrules', 'GEMINI.md', 'copilot-instructions.md'],
+  files: [
+    'CLAUDE.md',
+    'AGENTS.md',
+    'SKILL.md',
+    '.cursorrules',
+    '.windsurfrules',
+    'GEMINI.md',
+    'copilot-instructions.md',
+  ],
 
   check(content: string, filePath: string): LintIssue[] {
     const rules = parseRules(content)
@@ -114,9 +122,10 @@ export const noVerbose = {
           const tokensSaved = estimateTokenSavings(match[0], replacement)
 
           if (tokensSaved >= MIN_TOKEN_SAVINGS) {
-            const savingsPct = replacementLen > 0
-              ? Math.round((originalLen - replacementLen) / originalLen * 100)
-              : 100 // empty replacement = 100% removal
+            const savingsPct =
+              replacementLen > 0
+                ? Math.round(((originalLen - replacementLen) / originalLen) * 100)
+                : 100 // empty replacement = 100% removal
             issues.push({
               ruleId: 'no-verbose',
               severity: 'warning',

@@ -1,5 +1,5 @@
 import { execSync } from 'node:child_process'
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
@@ -14,30 +14,36 @@ describe('CLI integration', () => {
 
     // Create config files with and without issues
     // CLAUDE.md with issues
-    writeFileSync(join(tmpDir, 'CLAUDE.md'), [
-      '# Test Rules',
-      '- Use TypeScript strict mode',
-      '- Use TypeScript strict mode',
-      '- Please be absolutely sure to always run tests',
-    ].join('\n'))
+    writeFileSync(
+      join(tmpDir, 'CLAUDE.md'),
+      [
+        '# Test Rules',
+        '- Use TypeScript strict mode',
+        '- Use TypeScript strict mode',
+        '- Please be absolutely sure to always run tests',
+      ].join('\n'),
+    )
 
     // skill with frontmatter
     mkdirSync(join(tmpDir, 'skills', 'good-skill'), { recursive: true })
-    writeFileSync(join(tmpDir, 'skills', 'good-skill', 'SKILL.md'), [
-      '---',
-      'name: good-skill',
-      'description: A good skill with proper frontmatter',
-      '---',
-      '# Good Skill',
-      '- Do something useful',
-    ].join('\n'))
+    writeFileSync(
+      join(tmpDir, 'skills', 'good-skill', 'SKILL.md'),
+      [
+        '---',
+        'name: good-skill',
+        'description: A good skill with proper frontmatter',
+        '---',
+        '# Good Skill',
+        '- Do something useful',
+      ].join('\n'),
+    )
 
     // skill without frontmatter
     mkdirSync(join(tmpDir, 'skills', 'bad-skill'), { recursive: true })
-    writeFileSync(join(tmpDir, 'skills', 'bad-skill', 'SKILL.md'), [
-      '# Bad Skill',
-      '- Has no frontmatter',
-    ].join('\n'))
+    writeFileSync(
+      join(tmpDir, 'skills', 'bad-skill', 'SKILL.md'),
+      ['# Bad Skill', '- Has no frontmatter'].join('\n'),
+    )
 
     // empty directory
     mkdirSync(join(tmpDir, 'empty-dir'), { recursive: true })

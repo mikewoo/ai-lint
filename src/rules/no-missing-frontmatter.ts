@@ -1,5 +1,5 @@
-import type { LintIssue } from '../types.js'
 import { parseFrontmatter } from '../parser/frontmatter.js'
+import type { LintIssue } from '../types.js'
 
 /**
  * Minimal SKILL.md frontmatter template.

@@ -1,8 +1,8 @@
-import type { LintIssue } from '../types.js'
 import { parseRules } from '../parser/markdown.js'
+import type { LintIssue } from '../types.js'
 
-/** Default max rule count */
-const DEFAULT_MAX_RULES = 15
+/** Default max rule count — set high enough that starter templates pass */
+const DEFAULT_MAX_RULES = 20
 
 /** Estimated average tokens per rule */
 const AVG_RULE_TOKENS = 8
@@ -12,11 +12,7 @@ export const maxLength = {
   description: 'Detect config files with excessive rule count (token bloat risk)',
   files: ['CLAUDE.md', 'AGENTS.md'],
 
-  check(
-    content: string,
-    filePath: string,
-    maxRules: number = DEFAULT_MAX_RULES,
-  ): LintIssue[] {
+  check(content: string, filePath: string, maxRules: number = DEFAULT_MAX_RULES): LintIssue[] {
     const rules = parseRules(content)
     const issues: LintIssue[] = []
 

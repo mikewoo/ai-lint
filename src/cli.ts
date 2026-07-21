@@ -1,62 +1,87 @@
 #! /usr/bin/env node
-import { existsSync, statSync } from 'node:fs'
+import { existsSync, readFileSync, statSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import chalk from 'chalk'
 import { Command } from 'commander'
+import { runCrossFiles, runFix, runLint } from './engine.js'
 import type { LintResult } from './report/render.js'
 import { calcHealth, render, renderJson } from './report/render.js'
-import { runCrossFiles, runFix, runLint } from './engine.js'
+
+/** Read the version from package.json so it stays in sync with the published package. */
+function readVersion(): string {
+  try {
+    const pkgPath = resolve(dirname(fileURLToPath(import.meta.url)), '..', 'package.json')
+    const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'))
+    return pkg.version || '0.0.0'
+  } catch {
+    return '0.0.0'
+  }
+}
 
 const program = new Command()
 
 program
   .name('ai-lint')
-  .description('The missing linter for AI prompt files — scan your CLAUDE.md, rules, and skills for issues')
-  .version('0.1.0')
+  .description(
+    'The missing linter for AI prompt files — scan your CLAUDE.md, rules, and skills for issues',
+  )
+  .version(readVersion())
   .argument('[path]', 'directory or file to scan', process.cwd())
   .option('--ci', 'exit with code 1 if any issues found')
   .option('--json', 'output results as JSON')
   .option('--no-color', 'disable colored output (useful in CI)')
   .option('--cross-files', 'enable cross-file detection')
   .option('--rules <ids>', 'comma-separated rule IDs to limit detection to')
-  .action((scanPath: string, options: { ci?: boolean; json?: boolean; noColor?: boolean; crossFiles?: boolean; rules?: string }) => {
-    const resolvedPath = resolve(scanPath || process.cwd())
-    const isFile = existsSync(resolvedPath) && statSync(resolvedPath).isFile()
-    const cwd = isFile ? dirname(resolvedPath) : resolvedPath
-    const targetFile = isFile ? resolvedPath : undefined
+  .action(
+    (
+      scanPath: string,
+      options: {
+        ci?: boolean
+        json?: boolean
+        noColor?: boolean
+        crossFiles?: boolean
+        rules?: string
+      },
+    ) => {
+      const resolvedPath = resolve(scanPath || process.cwd())
+      const isFile = existsSync(resolvedPath) && statSync(resolvedPath).isFile()
+      const cwd = isFile ? dirname(resolvedPath) : resolvedPath
+      const targetFile = isFile ? resolvedPath : undefined
 
-    if (options.noColor) {
-      chalk.level = 0
-    }
-
-    const result = runLint({ cwd, targetFile, rulesFilter: options.rules })
-    const crossResult = options.crossFiles ? runCrossFiles({ cwd }) : null
-
-    if (options.json) {
-      const jsonOutput = crossResult
-        ? { ...crossResult, crossFiles: crossResult.files[0]?.issues || [] }
-        : result
-      console.log(renderJson(jsonOutput as LintResult))
-    } else {
-      console.log(render(result, cwd))
-      if (crossResult && crossResult.files[0]?.issues.length > 0) {
-        console.log(chalk.bold('\n  ── Cross-file Detection ──\n'))
-        for (const issue of crossResult.files[0].issues) {
-          const icon = issue.severity === 'error' ? '❌' : '⚠️'
-          const color = issue.severity === 'error' ? chalk.red : chalk.yellow
-          console.log(`  ${color(`${icon} ${issue.ruleId}`)}  ${issue.file}  ${issue.message}`)
-        }
-        console.log()
+      if (options.noColor) {
+        chalk.level = 0
       }
-    }
 
-    const totalErrors = result.errors + (crossResult?.errors || 0)
-    const totalWarnings = result.warnings + (crossResult?.warnings || 0)
+      const result = runLint({ cwd, targetFile, rulesFilter: options.rules })
+      const crossResult = options.crossFiles ? runCrossFiles({ cwd }) : null
 
-    if (options.ci && (totalErrors > 0 || totalWarnings > 0)) {
-      process.exit(1)
-    }
-  })
+      if (options.json) {
+        const jsonOutput = crossResult
+          ? { ...crossResult, crossFiles: crossResult.files[0]?.issues || [] }
+          : result
+        console.log(renderJson(jsonOutput as LintResult))
+      } else {
+        console.log(render(result, cwd))
+        if (crossResult && crossResult.files[0]?.issues.length > 0) {
+          console.log(chalk.bold('\n  ── Cross-file Detection ──\n'))
+          for (const issue of crossResult.files[0].issues) {
+            const icon = issue.severity === 'error' ? '❌' : '⚠️'
+            const color = issue.severity === 'error' ? chalk.red : chalk.yellow
+            console.log(`  ${color(`${icon} ${issue.ruleId}`)}  ${issue.file}  ${issue.message}`)
+          }
+          console.log()
+        }
+      }
+
+      const totalErrors = result.errors + (crossResult?.errors || 0)
+      const totalWarnings = result.warnings + (crossResult?.warnings || 0)
+
+      if (options.ci && (totalErrors > 0 || totalWarnings > 0)) {
+        process.exit(1)
+      }
+    },
+  )
 
 // ai-lint fix [path]
 program
@@ -70,7 +95,12 @@ program
     const isFile = existsSync(resolvedPath) && statSync(resolvedPath).isFile()
     const cwd = isFile ? dirname(resolvedPath) : resolvedPath
     const targetFile = isFile ? resolvedPath : undefined
-    const { result, fixed, details } = runFix({ cwd, targetFile, rulesFilter: options.rules, dryRun: options.dryRun })
+    const { result, fixed, details } = runFix({
+      cwd,
+      targetFile,
+      rulesFilter: options.rules,
+      dryRun: options.dryRun,
+    })
 
     // Display per-item fix details
     for (const d of details) {
@@ -189,8 +219,7 @@ program
           '',
           '## Testing Guidelines',
           '- Framework: `<test framework>`',
-          '- Coverage target: `<N>%`',
-          '- Run before committing',
+          '- Maintain `<N>%` test coverage, run before committing',
           '',
           '## Architecture Constraints',
           '- Module structure: `<describe layout>`',
@@ -343,14 +372,10 @@ program
           'Component tokens reference color and spacing tokens via `{path.to.token}`.',
           'Add hover/focus/active variants as sibling entries with suffixed keys.',
           '',
-          '## Do\'s and Don\'ts',
+          "## Do's and Don'ts",
           '',
-          '- **Do** use design tokens, not raw values, in all generated code',
-          '- **Do** check color contrast before shipping UI',
-          '- **Do** keep the design system file under 300 lines',
-          "- **Don't** add new colors without updating the YAML tokens",
-          "- **Don't** use accent color for non-interactive elements",
-          "- **Don't** mix typography scales within the same component",
+          '- **Do** use design tokens, check color contrast, and keep files under 300 lines',
+          "- **Don't** add colors without YAML tokens, use accent for non-interactive, or mix typography scales",
         ].join('\n'),
       },
     }
@@ -401,32 +426,49 @@ program
 
     const scores: number[] = []
     for (const { file, issues } of result.files) {
-      const displayName = file.type === 'skill'
-        ? file.path.split('/').slice(-2).join('/').padEnd(28)
-        : file.name.padEnd(28)
+      const displayName =
+        file.type === 'skill'
+          ? file.path.split('/').slice(-2).join('/').padEnd(28)
+          : file.name.padEnd(28)
 
       const score = calcHealth(issues)
       scores.push(score)
 
-      const status = score >= 90 ? chalk.green('✅ OK') : score >= 60 ? chalk.yellow('⚠️  warn') : chalk.red('❌ poor')
-      const scoreStr = `${score}/100`.padStart(6)
+      const status =
+        score >= 90
+          ? chalk.green('✅ OK')
+          : score >= 60
+            ? chalk.yellow('⚠️  warn')
+            : chalk.red('❌ poor')
+      const scoreStr = `${score}/100`.padStart(7)
 
       console.log(`  │ ${displayName} │ ${scoreStr} │ ${status}     │`)
     }
 
     console.log('  └──────────────────────────────┴────────┴────────┘')
 
-    const avg = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0
-    const avgStatus = avg >= 90 ? chalk.green('healthy') : avg >= 60 ? chalk.yellow('needs attention') : chalk.red('critical')
+    const avg =
+      scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0
+    const avgStatus =
+      avg >= 90
+        ? chalk.green('healthy')
+        : avg >= 60
+          ? chalk.yellow('needs attention')
+          : chalk.red('critical')
 
-    console.log(`\n  ${result.files.length} files  |  Average health: ${avg}/100  |  Overall: ${avgStatus}\n`)
+    console.log(
+      `\n  ${result.files.length} files  |  Average health: ${avg}/100  |  Overall: ${avgStatus}\n`,
+    )
   })
 
 // ai-lint install <tool>
 program
   .command('install')
   .description('install ai-lint skill/rule into an AI coding tool')
-  .argument('<tool>', 'tool to install into: claude, codex, opencode, qoder, cursor, windsurf, gemini, copilot, all')
+  .argument(
+    '<tool>',
+    'tool to install into: claude, codex, opencode, qoder, cursor, windsurf, gemini, copilot, all',
+  )
   .option('--global', 'install user-wide (where supported)')
   .action(async (tool: string, options: { global?: boolean }) => {
     const { writeFileSync, mkdirSync, existsSync } = await import('node:fs')
@@ -473,7 +515,10 @@ program
       '- Run `npx al fix --dry-run` before committing config changes',
     ].join('\n')
 
-    const installers: Record<string, { paths: string[]; content: string; label: string; method: string }> = {
+    const installers: Record<
+      string,
+      { paths: string[]; content: string; label: string; method: string }
+    > = {
       claude: {
         paths: isGlobal
           ? [join(home, '.claude', 'skills', 'ai-lint')]
@@ -530,9 +575,7 @@ program
       },
     }
 
-    const tools = tool === 'all'
-      ? Object.keys(installers)
-      : tool in installers ? [tool] : []
+    const tools = tool === 'all' ? Object.keys(installers) : tool in installers ? [tool] : []
 
     if (tools.length === 0) {
       console.log(`\n  Unknown tool: "${tool}"\n`)

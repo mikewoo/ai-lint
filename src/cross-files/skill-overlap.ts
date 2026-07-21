@@ -30,10 +30,7 @@ export function detectSkillOverlap(skills: SkillInfo[]): LintIssue[] {
       const b = skills[j]
 
       // 1. Description similarity
-      const descSim = textSimilarity(
-        a.meta.description || '',
-        b.meta.description || '',
-      )
+      const descSim = textSimilarity(a.meta.description || '', b.meta.description || '')
 
       // 2. Rule content similarity
       const rulesA = parseRules(a.content)

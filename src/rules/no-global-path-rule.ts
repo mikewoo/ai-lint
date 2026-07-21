@@ -1,5 +1,5 @@
-import type { LintIssue } from '../types.js'
 import { parseRules } from '../parser/markdown.js'
+import type { LintIssue } from '../types.js'
 
 /**
  * Phrase patterns that suggest a rule should be scoped to a specific path.
@@ -8,16 +8,29 @@ import { parseRules } from '../parser/markdown.js'
  *
  * Each group: prefix match → extract the immediately following path/directory name as the scope target.
  */
-const SCOPED_HINTS: { prefix: RegExp; extract: RegExp }[] = [
+const SCOPED_HINTS: {
+  prefix: RegExp
+  extract: RegExp
+  /** When true, the prefix alone is a weak signal and needs extra validation */
+  loosePrefix?: boolean
+}[] = [
   // In/for/regarding X directory/module/file/folder (Chinese)
   {
     prefix: /(?:在|针对?|对?于)\s+(?:the\s+)?/gi,
     extract: /`?([\w./-]+)`?\s*(?:目录|文件夹|文件|模块|下|中|里|内|的)/gi,
   },
-  // For/In/Under the X directory/module/file
+  // For/In/Under the X directory/module/file — "in" is the most common English
+  // preposition; treating every sentence-internal "in" as a scoping signal
+  // produces false positives (e.g. "New features go in dedicated modules").
+  //
+  // \b prevents matching "in" inside "within", "under" inside "thunder", etc.
+  // When the prefix match lacks "the" AND the extracted target isn't
+  // path-like (no /), treat it as a prepositional phrase, not a scope.
   {
-    prefix: /(?:for|in|under)\s+(?:the\s+)?/gi,
-    extract: /`?([\w./-]+)`?\s*(?:directory|directories|folder|folders|file|files|module|modules|component|components)/gi,
+    prefix: /\b(?:for|in|under)\s+(?:the\s+)?/gi,
+    extract:
+      /`?([\w./-]+)`?\s*(?:directory|directories|folder|folders|file|files|module|modules|component|components)/gi,
+    loosePrefix: true,
   },
   // Only in/for X
   {
@@ -32,12 +45,14 @@ const SCOPED_HINTS: { prefix: RegExp; extract: RegExp }[] = [
   // Applies to X directory
   {
     prefix: /(?:适用于?|applies?\s+to)\s+(?:the\s+)?/gi,
-    extract: /`?([\w./-]+)`?\s*(?:目录|文件夹|文件|模块|下|中|里|内|的|component|module|directory|folder|file)/gi,
+    extract:
+      /`?([\w./-]+)`?\s*(?:目录|文件夹|文件|模块|下|中|里|内|的|component|module|directory|folder|file)/gi,
   },
   // All/everything in X directory/folder/file/module
   {
     prefix: /(?<=[\s,，])/g,
-    extract: /`?([\w./-]+(?:目录|文件夹|文件|模块))`?\s*(?:中?的?|下?的?|内?的?)?\s*(?:所有|全部|all|every)/gi,
+    extract:
+      /`?([\w./-]+(?:目录|文件夹|文件|模块))`?\s*(?:中?的?|下?的?|内?的?)?\s*(?:所有|全部|all|every)/gi,
   },
 ]
 
@@ -50,7 +65,8 @@ const FILE_SCOPE_MAP: Record<string, string[]> = {
 
 export const noGlobalPathRule = {
   id: 'no-global-path-rule' as const,
-  description: 'Detect path-scoped rules written as global (applied to every directory unnecessarily)',
+  description:
+    'Detect path-scoped rules written as global (applied to every directory unnecessarily)',
   files: ['CLAUDE.md', 'AGENTS.md'],
 
   check(content: string, filePath: string): LintIssue[] {
@@ -59,7 +75,7 @@ export const noGlobalPathRule = {
     const fileName = filePath.split('/').pop() || filePath
 
     for (const rule of rules) {
-      for (const { prefix, extract } of SCOPED_HINTS) {
+      for (const { prefix, extract, loosePrefix } of SCOPED_HINTS) {
         prefix.lastIndex = 0
         const prefixMatch = prefix.exec(rule.text)
         if (!prefixMatch) continue
@@ -72,6 +88,18 @@ export const noGlobalPathRule = {
         if (!extractMatch) continue
 
         const scopeTarget = extractMatch[1]
+
+        // For weak-signal patterns (e.g. bare "in"): the matched prefix is
+        // only a genuine scoping clause when it includes "the" (e.g. "in the
+        // src directory") or the extracted target looks like a filesystem path
+        // (e.g. "in src/routes").  Otherwise it is a prepositional phrase like
+        // "go in dedicated modules" — skip it.
+        if (loosePrefix) {
+          const prefixText = prefixMatch[0].toLowerCase()
+          const hasThe = /\bthe\b/.test(prefixText)
+          const isPathLike = scopeTarget.includes('/') || scopeTarget.includes('\\')
+          if (!hasThe && !isPathLike) continue
+        }
 
         // If referencing the current file itself, skip reporting
         const selfRefs = FILE_SCOPE_MAP[fileName] || []

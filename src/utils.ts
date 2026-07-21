@@ -2,12 +2,16 @@
  * Truncate text to maxLen characters, appending "..." if truncated.
  */
 export function truncate(text: string, maxLen: number): string {
-  return text.length > maxLen ? text.slice(0, maxLen) + '...' : text
+  return text.length > maxLen ? `${text.slice(0, maxLen)}...` : text
 }
 
 /**
  * Estimate the token count of a text.
  * Rough rule: English ~4 chars/token, CJK ~1.5 chars/token.
+ *
+ * This is a coarse heuristic used only for relative comparison and report
+ * display, not exact accounting. Real BPE tokenizers vary widely by model
+ * (Claude vs GPT), so precise counts require the actual tokenizer.
  */
 export function estimateTokens(text: string): number {
   let tokens = 0

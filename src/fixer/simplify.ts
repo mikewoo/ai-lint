@@ -60,9 +60,8 @@ export function simplifyText(text: string): string {
   // Ensure first letter is capitalized (English) — skip list markers
   const firstAlpha = result.search(/[a-zA-Z]/)
   if (firstAlpha >= 0 && /[a-z]/.test(result[firstAlpha])) {
-    result = result.slice(0, firstAlpha)
-      + result[firstAlpha].toUpperCase()
-      + result.slice(firstAlpha + 1)
+    result =
+      result.slice(0, firstAlpha) + result[firstAlpha].toUpperCase() + result.slice(firstAlpha + 1)
   }
 
   return result

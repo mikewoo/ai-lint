@@ -9,33 +9,35 @@ import type { LintIssue } from '../src/types.js'
 
 describe('simplifyText', () => {
   it('simplifies Chinese verbose text', () => {
-    expect(simplifyText('请务必确保一定在提交前运行所有测试'))
-      .toBe('请在提交前运行所有测试')
+    expect(simplifyText('请务必确保一定在提交前运行所有测试')).toBe('请在提交前运行所有测试')
   })
 
   it('simplifies English verbose text', () => {
-    expect(simplifyText('Please be absolutely sure to always run tests'))
-      .toBe('Please always run tests')
+    expect(simplifyText('Please be absolutely sure to always run tests')).toBe(
+      'Please always run tests',
+    )
   })
 
   it('removes leading filler words', () => {
-    expect(simplifyText('I want you to use TypeScript strict mode'))
-      .toBe('Use TypeScript strict mode')
+    expect(simplifyText('I want you to use TypeScript strict mode')).toBe(
+      'Use TypeScript strict mode',
+    )
   })
 
   it('removes memory reminder phrases', () => {
-    expect(simplifyText('Remember that you should always format before committing'))
-      .toBe('You should always format before committing')
+    expect(simplifyText('Remember that you should always format before committing')).toBe(
+      'You should always format before committing',
+    )
   })
 
   it('replaces long phrases with short words', () => {
-    expect(simplifyText('Due to the fact that it is essential to run tests'))
-      .toBe('Because must run tests')
+    expect(simplifyText('Due to the fact that it is essential to run tests')).toBe(
+      'Because must run tests',
+    )
   })
 
   it('collapses extra whitespace', () => {
-    expect(simplifyText('in   order   to   be  able  to  run'))
-      .toBe('To run')
+    expect(simplifyText('in   order   to   be  able  to  run')).toBe('To run')
   })
 
   it('leaves concise text unchanged', () => {

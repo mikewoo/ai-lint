@@ -38,11 +38,12 @@ const FILE_ALIASES: Record<string, string> = {
 export function getRulesForFile(fileName: string) {
   const canonicalName = FILE_ALIASES[fileName] || fileName
   return rules.filter((r) =>
-    r.files.some((f) =>
-      f === canonicalName ||
-      canonicalName.toLowerCase().endsWith(f.toLowerCase()) ||
-      f === '*' ||
-      (f === 'SKILL.md' && canonicalName.endsWith('SKILL.md')),
+    r.files.some(
+      (f) =>
+        f === canonicalName ||
+        canonicalName.toLowerCase().endsWith(f.toLowerCase()) ||
+        f === '*' ||
+        (f === 'SKILL.md' && canonicalName.endsWith('SKILL.md')),
     ),
   )
 }
@@ -50,11 +51,7 @@ export function getRulesForFile(fileName: string) {
 /**
  * Run all applicable rules against a given file.
  */
-export function lintFile(
-  content: string,
-  filePath: string,
-  fileName: string,
-): LintIssue[] {
+export function lintFile(content: string, filePath: string, fileName: string): LintIssue[] {
   const applicable = getRulesForFile(fileName)
   const allIssues: LintIssue[] = []
 
@@ -76,7 +73,9 @@ export function lintFile(
  */
 export function getFixer(ruleId: string) {
   const rule = rules.find((r) => r.id === ruleId)
-  return rule && 'fix' in rule ? (rule as unknown as { fix: (content: string, issue: LintIssue) => string }).fix : undefined
+  return rule && 'fix' in rule
+    ? (rule as unknown as { fix: (content: string, issue: LintIssue) => string }).fix
+    : undefined
 }
 
 export { rules }

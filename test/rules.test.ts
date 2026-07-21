@@ -2,10 +2,10 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { maxLength } from '../src/rules/max-length.js'
+import { noConflict } from '../src/rules/no-conflict.js'
 import { noDuplicate } from '../src/rules/no-duplicate.js'
 import { noGlobalPathRule } from '../src/rules/no-global-path-rule.js'
 import { noMissingFrontmatter } from '../src/rules/no-missing-frontmatter.js'
-import { noConflict } from '../src/rules/no-conflict.js'
 import { noNullEffect } from '../src/rules/no-null-effect.js'
 import { noOverconstrain } from '../src/rules/no-overconstrain.js'
 import { noSemanticDuplicate } from '../src/rules/no-semantic-duplicate.js'
@@ -83,9 +83,7 @@ describe('no-duplicate', () => {
 
 describe('no-verbose', () => {
   it('detects Chinese verbose expressions', () => {
-    const content = [
-      '- 请务必确保一定在提交前运行所有测试',
-    ].join('\n')
+    const content = ['- 请务必确保一定在提交前运行所有测试'].join('\n')
 
     const issues = noVerbose.check(content, 'CLAUDE.md')
 
@@ -245,9 +243,7 @@ describe('no-stale-reference', () => {
     const content = '- Use version v1.0.0 for the build\n'
     const issues = noStaleReference.check(content, '/tmp/test.md')
 
-    const pathIssues = issues.filter((i) =>
-      i.message.includes('v1.0.0'),
-    )
+    const pathIssues = issues.filter((i) => i.message.includes('v1.0.0'))
     expect(pathIssues).toHaveLength(0)
   })
 
@@ -305,6 +301,34 @@ describe('no-global-path-rule', () => {
     const issues = noGlobalPathRule.check(content, 'CLAUDE.md')
 
     expect(issues).toHaveLength(0)
+  })
+
+  it('does not report prepositional "in" as path scope', () => {
+    // These are ordinary descriptive rules, not path-scoped.
+    // "in" here is a preposition, not a scoping signal.
+    const cases = [
+      '- New features go in dedicated modules',
+      '- Keep the code consistent across the same style',
+      '- Keep modules loosely coupled',
+      '- Prefer composition over inheritance in your components',
+      "- **Don't** mix typography scales within the same component",
+    ]
+
+    for (const c of cases) {
+      const issues = noGlobalPathRule.check(c, 'CLAUDE.md')
+      expect(issues).toHaveLength(0)
+    }
+  })
+
+  it('still detects path-scoped rules without "the" when target is path-like', () => {
+    // "src/routes" contains "/" — clearly a filesystem path.
+    // The rule says "For src/routes directory" without "the", yet the path
+    // separator proves it's a real scope target, not a prepositional phrase.
+    const content = '- For src/routes directory use lazy loading for data-fetching\n'
+    const issues = noGlobalPathRule.check(content, 'CLAUDE.md')
+
+    expect(issues.length).toBeGreaterThan(0)
+    expect(issues[0].message).toContain('src/routes')
   })
 })
 
@@ -389,10 +413,7 @@ describe('no-semantic-duplicate', () => {
   })
 
   it('identical rules are not reported (left to no-duplicate)', () => {
-    const content = [
-      '- Use TypeScript strict mode',
-      '- Use TypeScript strict mode',
-    ].join('\n')
+    const content = ['- Use TypeScript strict mode', '- Use TypeScript strict mode'].join('\n')
 
     const issues = noSemanticDuplicate.check(content, 'test.md')
     expect(issues).toHaveLength(0)
@@ -413,6 +434,21 @@ describe('no-semantic-duplicate', () => {
     const issues = noSemanticDuplicate.check('- One rule\n', 'test.md')
     expect(issues).toHaveLength(0)
   })
+
+  it('does not report conflict pairs as semantic duplicates', () => {
+    // High Jaccard similarity but opposing keywords — these are conflicts,
+    // not duplicates. Auto-fixing them would silently pick one side.
+    const conflictCases = [
+      '- Use tabs for indentation\n- Use spaces for indentation',
+      '- Prefer single quotes for strings\n- Prefer double quotes for strings',
+      '- Always add type annotations\n- Avoid type annotations',
+    ]
+
+    for (const c of conflictCases) {
+      const issues = noSemanticDuplicate.check(c, 'CLAUDE.md')
+      expect(issues).toHaveLength(0)
+    }
+  })
 })
 
 // ============================================================
@@ -421,10 +457,7 @@ describe('no-semantic-duplicate', () => {
 
 describe('no-conflict', () => {
   it('detects indentation conflict (tabs vs spaces)', () => {
-    const content = [
-      '- Use tabs for indentation',
-      '- Use spaces for indentation',
-    ].join('\n')
+    const content = ['- Use tabs for indentation', '- Use spaces for indentation'].join('\n')
 
     const issues = noConflict.check(content, 'test.md')
 
@@ -579,7 +612,9 @@ describe('no-null-effect', () => {
 describe('no-skill-bloat', () => {
   it('reports when skill rule count exceeds limit', () => {
     const rules = Array.from({ length: 25 }, (_, i) => `- Rule number ${i + 1} for testing\n`)
-    const content = ['---', 'name: test', 'description: test', '---', '# Skill', ...rules].join('\n')
+    const content = ['---', 'name: test', 'description: test', '---', '# Skill', ...rules].join(
+      '\n',
+    )
 
     const issues = noSkillBloat.check(content, 'skills/test/SKILL.md', 20)
 
@@ -599,7 +634,15 @@ describe('no-skill-bloat', () => {
   })
 
   it('normal-sized skill is not reported', () => {
-    const content = ['---', 'name: normal', 'description: A normal skill', '---', '# Normal', '- Rule one', '- Rule two'].join('\n')
+    const content = [
+      '---',
+      'name: normal',
+      'description: A normal skill',
+      '---',
+      '# Normal',
+      '- Rule one',
+      '- Rule two',
+    ].join('\n')
 
     const issues = noSkillBloat.check(content, 'skills/normal/SKILL.md')
     expect(issues).toHaveLength(0)

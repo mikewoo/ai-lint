@@ -1,10 +1,11 @@
-import { truncate } from '../utils.js'
-import type { LintIssue } from '../types.js'
 import { textSimilarity } from '../fixer/deduplicate.js'
 import { parseRules } from '../parser/markdown.js'
+import type { LintIssue } from '../types.js'
+import { truncate } from '../utils.js'
+import { isConflictPair } from './no-conflict.js'
 
 /** Minimum similarity threshold to consider as semantic duplicate */
-const SIMILARITY_THRESHOLD = 0.50
+const SIMILARITY_THRESHOLD = 0.5
 
 /** Literal identical text is not reported again (already handled by no-duplicate) */
 const LITERAL_SAME_THRESHOLD = 0.95
@@ -12,7 +13,15 @@ const LITERAL_SAME_THRESHOLD = 0.95
 export const noSemanticDuplicate = {
   id: 'no-semantic-duplicate' as const,
   description: 'Detect semantically duplicate rules — different wording, same meaning',
-  files: ['CLAUDE.md', 'AGENTS.md', 'SKILL.md', '.cursorrules', '.windsurfrules', 'GEMINI.md', 'copilot-instructions.md'],
+  files: [
+    'CLAUDE.md',
+    'AGENTS.md',
+    'SKILL.md',
+    '.cursorrules',
+    '.windsurfrules',
+    'GEMINI.md',
+    'copilot-instructions.md',
+  ],
 
   check(content: string, filePath: string): LintIssue[] {
     const rules = parseRules(content)
@@ -33,6 +42,11 @@ export const noSemanticDuplicate = {
 
         if (sim > LITERAL_SAME_THRESHOLD) continue
         if (sim >= SIMILARITY_THRESHOLD) {
+          // High word overlap from near-identical structure does not equal
+          // duplication when the key terms are opposites (e.g. "use tabs" vs
+          // "use spaces"). A conflict pair needs human judgment, not auto-fix.
+          if (isConflictPair(rules[i].text, rules[j].text)) continue
+
           similarLines.push(rules[j].line)
           grouped.add(rules[j].line)
         }

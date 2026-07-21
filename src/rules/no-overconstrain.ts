@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
-import type { LintIssue } from '../types.js'
 import { parseRules } from '../parser/markdown.js'
+import type { LintIssue } from '../types.js'
 
 /**
  * Tech stack keywords → corresponding project presence detection files.
@@ -67,7 +67,14 @@ const TECH_INDICATORS: Array<{
   },
   {
     keywords: /\b(?:eslint|\.eslintrc|eslint\.config)\b/gi,
-    configFiles: ['.eslintrc.js', '.eslintrc.cjs', '.eslintrc.json', '.eslintrc.yaml', 'eslint.config.js', 'eslint.config.mjs'],
+    configFiles: [
+      '.eslintrc.js',
+      '.eslintrc.cjs',
+      '.eslintrc.json',
+      '.eslintrc.yaml',
+      'eslint.config.js',
+      'eslint.config.mjs',
+    ],
     tech: 'ESLint',
   },
   {
@@ -79,8 +86,16 @@ const TECH_INDICATORS: Array<{
 
 export const noOverconstrain = {
   id: 'no-overconstrain' as const,
-  description: 'Detect rules that constrain contexts where they may not apply (tech stack mismatch)',
-  files: ['CLAUDE.md', 'AGENTS.md', '.cursorrules', '.windsurfrules', 'GEMINI.md', 'copilot-instructions.md'],
+  description:
+    'Detect rules that constrain contexts where they may not apply (tech stack mismatch)',
+  files: [
+    'CLAUDE.md',
+    'AGENTS.md',
+    '.cursorrules',
+    '.windsurfrules',
+    'GEMINI.md',
+    'copilot-instructions.md',
+  ],
 
   check(content: string, filePath: string): LintIssue[] {
     const rules = parseRules(content)

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { detectCrossFileConflicts } from '../src/cross-files/conflict.js'
-import { detectSkillOverlap, type SkillInfo } from '../src/cross-files/skill-overlap.js'
+import { type SkillInfo, detectSkillOverlap } from '../src/cross-files/skill-overlap.js'
 
 describe('detectCrossFileConflicts', () => {
   it('detects cross-file indentation conflict', () => {
@@ -61,7 +61,10 @@ describe('detectSkillOverlap', () => {
     const skills: SkillInfo[] = [
       {
         name: 'image-generator',
-        meta: { name: 'image-generator', description: 'Generate images from text prompts using AI' },
+        meta: {
+          name: 'image-generator',
+          description: 'Generate images from text prompts using AI',
+        },
         content: [
           '---',
           'name: image-generator',
@@ -78,7 +81,10 @@ describe('detectSkillOverlap', () => {
       },
       {
         name: 'ai-artist',
-        meta: { name: 'ai-artist', description: 'Create AI images from text prompts and descriptions' },
+        meta: {
+          name: 'ai-artist',
+          description: 'Create AI images from text prompts and descriptions',
+        },
         content: [
           '---',
           'name: ai-artist',
@@ -107,13 +113,15 @@ describe('detectSkillOverlap', () => {
       {
         name: 'image-gen',
         meta: { name: 'image-gen', description: 'Generate images from text prompts' },
-        content: '---\nname: image-gen\ndescription: Generate images\n---\n# Image Gen\n- Create images\n',
+        content:
+          '---\nname: image-gen\ndescription: Generate images\n---\n# Image Gen\n- Create images\n',
         path: '/skills/a/SKILL.md',
       },
       {
         name: 'code-review',
         meta: { name: 'code-review', description: 'Review code for bugs and style issues' },
-        content: '---\nname: code-review\ndescription: Review code\n---\n# Code Review\n- Check for bugs\n',
+        content:
+          '---\nname: code-review\ndescription: Review code\n---\n# Code Review\n- Check for bugs\n',
         path: '/skills/b/SKILL.md',
       },
     ]

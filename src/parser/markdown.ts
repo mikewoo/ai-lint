@@ -38,6 +38,15 @@ const HR_RE = /^[-*_]{3,}\s*$/
  */
 const FENCE_RE = /^`{3,}|^~{3,}/
 
+/**
+ * Matches a blockquote marker at the start of a line:
+ *   > text
+ *   >> nested
+ * The rule text carried by a blockquote is still a rule, so we strip the
+ * marker and treat the remainder as normal content.
+ */
+const BLOCKQUOTE_RE = /^\s*>+\s?/
+
 /** Minimum character count for text to be considered a "valuable rule" */
 const MIN_RULE_LENGTH = 8
 
@@ -61,7 +70,7 @@ export function parseRules(content: string): RuleEntry[] {
 
   for (let i = 0; i < lines.length; i++) {
     const raw = lines[i]
-    const trimmed = raw.trim()
+    let trimmed = raw.trim()
     const lineNumber = i + 1
 
     // Detect frontmatter boundaries (--- at the start of the file)
@@ -89,7 +98,12 @@ export function parseRules(content: string): RuleEntry[] {
     // Skip code block content
     if (inCodeBlock) continue
 
-    // Skip blank lines
+    // Strip blockquote markers so quoted rules are still extracted
+    if (BLOCKQUOTE_RE.test(trimmed)) {
+      trimmed = trimmed.replace(BLOCKQUOTE_RE, '').trim()
+    }
+
+    // Skip blank lines (also covers bare "&gt;" blockquote markers)
     if (trimmed === '') continue
 
     // Skip headings
@@ -123,14 +137,47 @@ export function parseRules(content: string): RuleEntry[] {
       // Standalone paragraph — treated as potential rule
       // Requirement: must start with an uppercase letter or CJK character (to avoid catching code snippet remnants)
       if (isRuleLikeLine(trimmed) && trimmed.length >= MIN_RULE_LENGTH) {
-        // Merge consecutive non-list paragraphs (e.g. multi-line paragraphs)
-        // Simplified: each standalone line becomes one rule entry
-        entries.push({ text: trimmed, line: lineNumber, raw })
+        // Merge wrapped continuation lines into a single rule entry.
+        // A continuation line is a plain paragraph line that starts with a
+        // lowercase letter — the hallmark of a sentence broken across lines.
+        // Two uppercase-led or two CJK lines stay separate (distinct rules).
+        let merged = trimmed
+        // Stop merging once the accumulated text closes a sentence — a real
+        // wrap never resumes after terminal punctuation.
+        while (i + 1 < lines.length && !endsSentence(merged) && isWrapContinuation(lines[i + 1])) {
+          merged += ` ${lines[i + 1].trim()}`
+          i++
+        }
+        entries.push({ text: merged, line: lineNumber, raw })
       }
     }
   }
 
   return entries
+}
+
+/**
+ * Determines whether the next raw line is a wrapped continuation of the
+ * current standalone-paragraph rule (a sentence broken across lines).
+ *
+ * Only a plain paragraph line starting with a lowercase letter qualifies.
+ * Structural lines (blank, list, ordered list, heading, HR, fence, blockquote,
+ * HTML comment) end the current rule, as do uppercase- or CJK-led lines, which
+ * are treated as the start of a new distinct rule.
+ */
+function isWrapContinuation(rawLine: string): boolean {
+  const t = rawLine.trim()
+  if (t === '') return false
+  if (LIST_ITEM_RE.test(t) || ORDERED_LIST_RE.test(t)) return false
+  if (HEADING_RE.test(t) || HR_RE.test(t) || FENCE_RE.test(t)) return false
+  if (BLOCKQUOTE_RE.test(t) || t.startsWith('<!--')) return false
+  // A wrapped sentence continues with a lowercase letter.
+  return /^[a-z]/.test(t)
+}
+
+/** Whether text ends with sentence-terminating punctuation (ASCII or CJK). */
+function endsSentence(text: string): boolean {
+  return /[.!?。！？]$/.test(text.trim())
 }
 
 /**
@@ -146,9 +193,22 @@ function isRuleLikeLine(text: string): boolean {
 
   // Common instruction keyword starters
   const instructionStarters = [
-    'always', 'never', 'ensure', 'make', 'use', 'avoid',
-    'prefer', 'do not', "don't", 'all ', 'every ', 'you ',
-    'when ', 'if ', 'for ', 'the ',
+    'always',
+    'never',
+    'ensure',
+    'make',
+    'use',
+    'avoid',
+    'prefer',
+    'do not',
+    "don't",
+    'all ',
+    'every ',
+    'you ',
+    'when ',
+    'if ',
+    'for ',
+    'the ',
   ]
   const lower = text.toLowerCase()
   return instructionStarters.some((s) => lower.startsWith(s))

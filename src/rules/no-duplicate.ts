@@ -1,7 +1,7 @@
-import { estimateTokens, truncate } from '../utils.js'
-import type { LintIssue } from '../types.js'
 import { deduplicateContent } from '../fixer/deduplicate.js'
 import { parseRules } from '../parser/markdown.js'
+import type { LintIssue } from '../types.js'
+import { estimateTokens, truncate } from '../utils.js'
 
 /**
  * no-duplicate — Literal duplicate rule detection.
@@ -12,7 +12,15 @@ import { parseRules } from '../parser/markdown.js'
 export const noDuplicate = {
   id: 'no-duplicate' as const,
   description: 'Detect literal duplicate rules — identical text appearing more than once',
-  files: ['CLAUDE.md', 'AGENTS.md', 'SKILL.md', '.cursorrules', '.windsurfrules', 'GEMINI.md', 'copilot-instructions.md'],
+  files: [
+    'CLAUDE.md',
+    'AGENTS.md',
+    'SKILL.md',
+    '.cursorrules',
+    '.windsurfrules',
+    'GEMINI.md',
+    'copilot-instructions.md',
+  ],
 
   check(content: string, filePath: string): LintIssue[] {
     const rules = parseRules(content)
@@ -21,8 +29,9 @@ export const noDuplicate = {
 
     for (const rule of rules) {
       const normalized = rule.text.trim().toLowerCase()
-      if (seen.has(normalized)) {
-        seen.get(normalized)!.push({ line: rule.line, raw: rule.raw })
+      const existing = seen.get(normalized)
+      if (existing) {
+        existing.push({ line: rule.line, raw: rule.raw })
       } else {
         seen.set(normalized, [{ line: rule.line, raw: rule.raw }])
       }

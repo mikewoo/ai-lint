@@ -1,13 +1,13 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { basename, resolve } from 'node:path'
-import type { LintIssue } from './types.js'
 import { detectCrossFileConflicts } from './cross-files/conflict.js'
-import { detectSkillOverlap, type SkillInfo } from './cross-files/skill-overlap.js'
-import { findFiles, shortPath, type FoundFile } from './discovery/find-files.js'
+import { type SkillInfo, detectSkillOverlap } from './cross-files/skill-overlap.js'
+import { type FoundFile, findFiles, shortPath } from './discovery/find-files.js'
 import { parseFrontmatter } from './parser/frontmatter.js'
 import type { FileResult, LintResult } from './report/render.js'
 import { summarize } from './report/render.js'
 import { getFixer, lintFile } from './rules/registry.js'
+import type { LintIssue } from './types.js'
 
 export interface LintOptions {
   cwd?: string
@@ -55,7 +55,12 @@ function resolveFiles(options: LintOptions): { cwd: string; files: FoundFile[] }
  */
 function resolveFilter(options: LintOptions): Set<string> | null {
   return options.rulesFilter
-    ? new Set(options.rulesFilter.split(',').map((s) => s.trim()).filter(Boolean))
+    ? new Set(
+        options.rulesFilter
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean),
+      )
     : null
 }
 
@@ -111,7 +116,12 @@ export function runFix(options: LintOptions = {}): FixReport {
             content = newContent
             fixedCount++
             fileFixed++
-            fixDetails.push({ file: displayName, ruleId: issue.ruleId, message: issue.message, line: issue.line })
+            fixDetails.push({
+              file: displayName,
+              ruleId: issue.ruleId,
+              message: issue.message,
+              line: issue.line,
+            })
           }
         } catch {
           // fix failed, skip
