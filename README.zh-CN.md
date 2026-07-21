@@ -18,6 +18,7 @@ npx @itdest/ai-lint
 
 - [安装](#安装)
 - [快速开始](#快速开始)
+- [集成 — AI 工具](#集成--ai-工具)
 - [检测范围](#检测范围)
 - [命令参考](#命令参考)
   - [`ai-lint` — 扫描](#ai-lint--扫描)
@@ -107,6 +108,27 @@ npx @itdest/ai-lint stats
 
   💡 运行 ai-lint fix 自动修复 4 个问题
 ```
+
+---
+
+## 集成 — AI 工具
+
+将 ai-lint 安装到 AI 编程工具中，让 AI 在对话中检查自己的配置文件。完整指南：[`integrations/README.md`](integrations/README.md)
+
+**工作原理**：每个集成会添加一个 skill 或 rule 文件，AI 在对话中读取它，从而获得检查配置健康度的能力——可以按需触发（问它"检查我的配置健康度"），也可以在编辑配置文件后自动检查。无需 API key、无网络调用，检查通过本地 ai-lint CLI 完成。
+
+| 工具 | 安装 | 方式 |
+|------|------|------|
+| **Claude Code** | `al install claude` | 安装 ai-lint skill 到 `.claude/skills/ai-lint/` |
+| **Codex CLI** | `al install codex` | 安装 ai-lint skill 到 `.codex/skills/ai-lint/` |
+| **OpenCode** | `al install opencode` | 安装 ai-lint skill 到 `.opencode/skills/ai-lint/` |
+| **Qoder** | `al install qoder` | 追加配置健康规则到 `AGENTS.md` |
+| **Cursor** | `al install cursor` | 追加配置健康规则到 `.cursorrules` |
+| **Windsurf** | `al install windsurf` | 追加配置健康规则到 `.windsurfrules` |
+| **Gemini CLI** | `al install gemini` | 追加配置健康规则到 `GEMINI.md` |
+| **GitHub Copilot** | `al install copilot` | 追加配置健康规则到 `copilot-instructions.md` |
+
+一次安装全部：`al install all`。需要全局安装（`npm i -g @itdest/ai-lint`）。无全局安装的手动安装方式见 [`integrations/README.md`](integrations/README.md)。
 
 ---
 
