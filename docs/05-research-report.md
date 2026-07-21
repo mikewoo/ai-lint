@@ -33,7 +33,7 @@
 | 4 | Multi-environment profile isolation — 8+ independent community tools emerged | ★★★★★ |
 | 5 | Cross-project Skills / MCP reuse | ★★★★★ |
 
-**Key insight**: Nobody cares about config format (JSON vs TOML). Everyone cares about config semantic health.
+**Key observation**: Across the demand signals analyzed, config semantic health (duplication, conflict, bloat) appeared as a more frequent concern than config format (JSON vs TOML vs YAML).
 
 ---
 
@@ -93,4 +93,4 @@ ai-lint diagnostic tool: **0 out of 7 falsification questions passed** → direc
 
 ## Final Conclusion
 
-**The ai-lint (config health detection) direction is validated.** It withstands falsification, has real demand signals, has academic backing, and 0 out of 57 competitors are doing it.
+**The config health detection direction shows initial support** across 6 research streams: demand signals from developer communities, competitive landscape analysis finding no direct competitors (0/57), and user feedback on config quality issues. Caveats: the falsification exercise was conducted internally; an independent review would strengthen confidence. Competitive landscape is a point-in-time snapshot (July 2026) and may shift.

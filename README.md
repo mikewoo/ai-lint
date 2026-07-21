@@ -1,9 +1,9 @@
 # ai-lint
 
-> The missing linter for AI prompt files. Like ESLint for JavaScript, but for your CLAUDE.md, rules, and skills.
+> The linter and optimizer for AI prompt files. Like ESLint for JavaScript, but for your CLAUDE.md, rules, and skills.
 
 <p align="center">
-  <img alt="version" src="https://img.shields.io/badge/version-0.1.1-34D058">
+  <img alt="version" src="https://img.shields.io/badge/version-0.1.2-34D058">
   <img alt="license" src="https://img.shields.io/badge/license-MIT-34D058">
   <img alt="node" src="https://img.shields.io/badge/node-%3E%3D18-34D058">
 </p>
@@ -185,7 +185,7 @@ ai-lint fix --rules=no-duplicate,no-verbose
 | Issue | Fix Behavior |
 |-------|-------------|
 | Duplicate rules | Keeps the most complete version, removes shorter copies |
-| Verbose phrasing | Replaces with concise equivalent |
+| Verbose phrasing | Replaces with concise equivalent (semantic equivalence not guaranteed for natural language; review suggested changes) |
 | Missing YAML frontmatter | Adds minimal `name` + `description` template |
 | Semantic duplicates | Removes the later occurrence |
 
@@ -424,17 +424,17 @@ Install ai-lint into your AI coding agent so it can check its own config files d
 
 ## Why ai-lint?
 
-**57 AI coding environment tools** exist as of July 2026. **Zero** do config health detection.
+AI config files accumulate issues over time: duplicate rules, conflicting instructions, verbose phrasing that wastes context window tokens, and references to files that no longer exist. Manual review doesn't scale as configs grow across multiple tools and team members.
 
-| Stat | Value |
+A survey of 57 tools in the AI coding ecosystem (July 2026) found that config quality detection is an underserved category. Most tools focus on managing or sharing configurations; none provide automated diagnostics for the config files themselves.
+
+| Observation | Source |
 |------|-------|
-| Popular configs with "config smells" | **91%** |
-| AI compliance drop (50 → 400 line CLAUDE.md) | **94% → 71%** |
-| Direct competitors (config quality detection) | **0 / 57** |
+| Config quality detection among 57 AI coding tools | 0 found (competitive survey) |
+| CLAUDE.md growth from 50 to 400 lines correlates with instruction compliance decline | Community reports (see docs/05-research-report.md) |
+| Common config issues: duplication, conflict, verbose phrasing, stale references | User feedback + pmAgent field test |
 
-Everyone is building config *managers*. Nobody is building config *doctors* — until now.
-
-**ai-lint = ESLint for AI configs.** Static analysis → health score → auto-fix.
+ai-lint scans your AI config files, assigns a health score, and auto-fixes what it can.
 
 ---
 
@@ -442,9 +442,24 @@ Everyone is building config *managers*. Nobody is building config *doctors* — 
 
 - **Read-only by default.** `ai-lint` scans and reports; `ai-lint fix` only touches what you ask it to.
 - **Zero config to start.** Run `npx @itdest/ai-lint` with no setup. After global install, use `al`.
-- **Fast.** Sub-second scans for typical project sizes.
+- **Fast.** Sub-second scans for projects with up to ~20 AI config files.
 - **Zero network.** 100% local, no telemetry, no API calls.
-- **ESLint-compatible mental model.** If you've used ESLint, you already know ai-lint.
+- **ESLint-compatible mental model.** Rule IDs, severities, and auto-fix follow patterns familiar to ESLint users.
+
+---
+
+## Roadmap
+
+**ai-lint is evolving from a single-file checker to a system-wide diagnostics engine** — from finding individual file issues to analyzing the health of your entire AI development configuration.
+
+| Version | Theme | Key Features |
+|---------|-------|--------------|
+| **v0.2** | Token Era | Token analysis engine, conflict detection (hard/soft/trigger) |
+| **v0.3** | Ecosystem | PR diff bot, dilution detection, auto-fix pre-commit, `.ai-lintrc.json` |
+| **v0.4** | Deep Diagnostics | Reference integrity, cross-file drift, rot detection, methodology audit |
+| **v1.0** | Stable | Architecture consolidation, i18n, rule marketplace foundation |
+
+👉 [Full roadmap →](./docs/06-improvement-roadmap.md)
 
 ---
 

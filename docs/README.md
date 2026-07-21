@@ -1,6 +1,6 @@
 # ai-lint Project Documentation
 
-> Like ESLint checks your JavaScript, ai-lint checks your AI coding configuration health.
+> The linter and optimizer for AI prompt files. Like ESLint for JavaScript, but for your CLAUDE.md, rules, and skills.
 
 ---
 
@@ -13,12 +13,14 @@
 | 03 | [Technical Architecture](./03-technical-architecture.md) | Architecture diagram, 4 production dependencies, Rule interface, Parser design |
 | 04 | [Development Plan](./04-development-plan.md) | 2-week / 10-day retrospective |
 | 05 | [Research Report Summary](./05-research-report.md) | 6-stream merged findings, falsification validation |
+| 06 | [Improvement Roadmap](./06-improvement-roadmap.md) | v0.2 → v1.0 roadmap, token analyzer, conflict detection, deep diagnostics（中文） |
+| 06-EN | [Improvement Roadmap (EN)](./06-improvement-roadmap-en.md) | English version of the improvement roadmap |
 
 ---
 
 ## One-Line Product Description
 
-> **`npx ai-lint`** — Scans your CLAUDE.md / AGENTS.md / SKILL.md / .cursorrules for duplicate rules, conflicting instructions, and token-waste patterns. Auto-fixes what it can.
+> **`npx ai-lint`** — Scans and optimizes your AI config files for duplicate rules, conflicting instructions, token-waste patterns, and toolchain redundancy. Auto-fixes what it can.
 
 ## Key Data Points
 
@@ -51,8 +53,11 @@ ai-lint → AI config health     (static analysis → scan → fix)
 | Zero-config start | ❌ (needs config file) | ✅ (`npx al` with no setup) |
 | Network required | ❌ (local only) | ❌ (100% local, no telemetry) |
 
+> Note: ESLint can run with zero config using built-in defaults (`npx eslint .`). The comparison above refers to the common practice of configuring ESLint with a `.eslintrc` file for project-specific rules, which ai-lint also supports via `.ai-lintrc.json` (planned).
+
 ## Project Links
 
 - **Main README** — [`../README.md`](../README.md): Installation, command reference, all detection rules, integrations overview
+- **Changelog** — [`../CHANGELOG.md`](../CHANGELOG.md): Release history and planned versions
 - **Integrations Guide** — [`../integrations/README.md`](../integrations/README.md): Installing ai-lint into Claude Code, Codex CLI, OpenCode, Qoder, Cursor, Windsurf, Gemini CLI, and GitHub Copilot
 - **中文 README** — [`../README.zh-CN.md`](../README.zh-CN.md): Chinese-language version of the main README

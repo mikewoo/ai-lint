@@ -51,7 +51,7 @@ Error [no-duplicate] "Use TypeScript strict mode" appears 3 times (lines 2, 4, 9
 **Rule ID**: `no-semantic-duplicate`
 **Applies to**: CLAUDE.md, AGENTS.md, SKILL.md, .cursorrules, .windsurfrules, GEMINI.md, copilot-instructions.md
 (Alias coverage: same as R1)
-**Auto-fixable**: No (requires human judgment)
+**Auto-fixable**: Yes (removes the later occurrence when similarity >= threshold)
 **Category**: Warning
 
 **What it detects**: Two or more rules that express the same meaning using different wording. Uses text similarity (Jaccard-based token overlap) with a threshold of >= 50%. Entries above 95% similarity are excluded (already caught by `no-duplicate`).
@@ -73,7 +73,7 @@ Warning [no-semantic-duplicate] Lines 14 and 16 have 85% semantic overlap
 **Applies to**: CLAUDE.md, AGENTS.md, SKILL.md, .cursorrules, .windsurfrules, GEMINI.md, copilot-instructions.md (within-file)
 **Cross-file**: Yes — detects conflicts between different config files
 (Alias coverage: same as R1)
-**Auto-fixable**: No (requires human judgment)
+**Auto-fixable**: Yes (removes the later occurrence when similarity >= threshold)
 **Category**: Error (within-file), Warning (cross-file)
 
 **What it detects**: Two rules that express contradictory requirements. Uses a predefined conflict-pair dictionary covering:

@@ -52,8 +52,10 @@ al install codex --global    # installs to ~/.codex/skills/ai-lint/
 
 1. Run `al install <tool>` once per project
 2. The AI agent reads the installed skill or rule
-3. Agent auto-checks config health after edits
-4. Agent suggests fixes when issues are found
+3. When prompted or after config edits, the agent can check config health
+4. Issues found are reported with fix suggestions
+
+> Note: AI agent behavior depends on the specific tool's context window and instruction-following reliability. Results may vary across tools and sessions.
 
 **Verify:** Ask your AI agent: "Check my config health"
 

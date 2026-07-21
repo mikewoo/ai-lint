@@ -1,9 +1,9 @@
 # ai-lint
 
-> 像 ESLint 检查 JavaScript 一样，检查你的 AI 编程配置是否健康。
+> AI 编程配置的检查与优化工具。像 ESLint 之于 JavaScript，ai-lint 之于 AI 配置。
 
 <p align="center">
-  <img alt="version" src="https://img.shields.io/badge/version-0.1.1-34D058">
+  <img alt="version" src="https://img.shields.io/badge/version-0.1.2-34D058">
   <img alt="license" src="https://img.shields.io/badge/license-MIT-34D058">
   <img alt="node" src="https://img.shields.io/badge/node-%3E%3D18-34D058">
 </p>
@@ -183,7 +183,7 @@ ai-lint fix --rules=no-duplicate,no-verbose
 | 问题 | 修复方式 |
 |------|---------|
 | 重复规则 | 保留最完整版本，删除较短副本 |
-| 冗余措辞 | 替换为简洁等效表述 |
+| 冗余措辞 | 替换为简洁等效表述（自然语言的语义等价无法保证，建议检查修改结果） |
 | 缺少 YAML frontmatter | 添加最小 `name` + `description` 模板 |
 | 语义重复 | 删除后出现的重复条目 |
 
@@ -396,17 +396,17 @@ const single = runLint({
 
 ## 为什么做 ai-lint
 
-截至 2026 年 7 月，市面上有 **57 个 AI 编程环境工具**，**0 个**在做配置质量检测。
+AI 配置文件随时间累积问题：重复规则、互相矛盾的指令、浪费 context window 的冗余措辞、指向不存在文件的过时引用。手动检查跟不上配置在多工具、多团队成员间的增长。
 
-| 数据 | 数值 |
+2026 年 7 月对 AI 编程生态 57 款工具的调查显示，配置质量检测是一个服务不足的类别。大多数工具聚焦于管理或分享配置，没有一款提供配置文件自身的自动诊断。
+
+| 观察 | 来源 |
 |------|------|
-| 热门配置含「配置气味」的比例 | **91%** |
-| CLAUDE.md 从 50 行膨胀到 400 行，AI 遵守率 | **94% → 71%** |
-| 配置质量检测赛道的直接竞品 | **0 / 57** |
+| 57 款 AI 编程工具中做配置质量检测的 | 0 款（竞品调研） |
+| CLAUDE.md 从 50 行增长到 400 行，AI 指令遵守率下降 | 社区反馈（详见 docs/05-research-report.md） |
+| 常见配置问题：重复、冲突、冗长措辞、过时引用 | 用户反馈 + pmAgent 实测 |
 
-所有人都在做配置**管理**，没人在做配置**诊断**——直到现在。
-
-**ai-lint = AI 配置的 ESLint。** 静态分析 → 健康评分 → 一键修复。
+ai-lint 扫描你的 AI 配置文件，给出健康评分，并自动修复可修复的问题。
 
 ---
 
@@ -414,9 +414,24 @@ const single = runLint({
 
 - **默认只读。** `ai-lint` 只扫描报告；`ai-lint fix` 只改你让它改的。
 - **零配置起步。** `npx @itdest/ai-lint` 直接跑，无需任何设置。
-- **快。** 常规项目亚秒级扫描。
+- **快。** 约 20 个 AI 配置文件以内的项目亚秒级扫描。
 - **零网络。** 100% 本地运行，无遥测，无 API 调用。
-- **如果你用过 ESLint，你已经会用 ai-lint。** 心智模型完全一致。
+- **ESLint 兼容的心智模型。** 如果你用过 ESLint，ai-lint 的规则 ID、严重级别和 auto-fix 机制会很熟悉。
+
+---
+
+## 路线图
+
+**ai-lint 正在从单文件检查工具进化为体系级诊断引擎**——从检查单个文件问题升级为诊断整个 AI 开发配置体系的健康度。
+
+| 版本 | 主题 | 核心功能 |
+|------|------|---------|
+| **v0.2** | Token 纪元 | Token 分析引擎、规则冲突检测（硬/软/触发词） |
+| **v0.3** | 生态集成 | PR diff 机器人、规则稀释检测、auto-fix pre-commit、`.ai-lintrc.json` |
+| **v0.4** | 深度诊断 | 引用完整性、跨文件漂移、腐化检测、方法论审计 |
+| **v1.0** | 正式版 | 架构收敛、国际化、规则市场基础 |
+
+👉 [完整路线图 →](./docs/06-improvement-roadmap.md)
 
 ---
 

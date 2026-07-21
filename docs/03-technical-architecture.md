@@ -241,7 +241,7 @@ interface LintOptions {
 Central module managing rule registration and file-to-rule mapping:
 
 ```typescript
-/** All 11 single-file rules registered in order */
+/** All 11 single-file rules (12 total with 1 cross-file rule) registered in order */
 const rules = [
   noDuplicate,
   noSemanticDuplicate,
@@ -558,13 +558,13 @@ import { runLint, runFix, runCrossFiles } from 'ai-lint'
 
 1. **Zero-config, zero-network.** The tool works immediately with no setup, no API keys, no telemetry. All scanning is local file I/O.
 
-2. **ESLint-compatible mental model.** Rules have IDs, severities, and auto-fix functions. Output style mimics ESLint's terminal format. Anyone familiar with ESLint can use ai-lint immediately.
+2. **ESLint-compatible mental model.** Rules have IDs, severities, and auto-fix functions. Output style follows a format familiar to ESLint users. Users with ESLint experience should find the concepts transferable.
 
 3. **Error-isolated rule execution.** If a single rule throws, the engine catches the error and continues with remaining rules. A bug in one rule does not block the entire scan.
 
 4. **Bottom-to-top fix ordering.** Fixes are applied from the highest line number to the lowest, so line numbers in subsequent fixes remain valid after earlier fixes are applied.
 
-5. **Health score as a communication tool.** The 0-100 health score makes config quality tangible. Teams can set score thresholds in CI and track improvement over time.
+5. **Health score as a communication tool.** The 0-100 health score provides a quick summary of config quality. Note: the scoring weights (error=-15, warning=-5) are heuristics, not empirically calibrated. Teams can use score thresholds as a guideline but should review individual issues for decision-making.
 
 6. **File name aliasing for seamless coverage.** `DESIGN.md` is aliased to the `CLAUDE.md` rule set. `Agent.md` (Cline convention) is aliased to `AGENTS.md`. Users don't need to know about internal aliases.
 

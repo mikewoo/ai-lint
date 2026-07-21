@@ -232,9 +232,9 @@ The 2-week plan was executed in full. Below is a summary of the deliverable agai
 
 ---
 
-## 7. Scope Creep (Positive)
+## 7. Out-of-Scope Features Added During Development
 
-The following features were not in the original 2-week plan but were added during development because they provided high value at low implementation cost:
+The following features were added during development despite not being in the original 2-week plan, as they were judged to provide sufficient value relative to their implementation cost:
 
 1. **`ai-lint stats`** -- Health score table view. Built in a single afternoon by wrapping the existing `runLint()` + `calcHealth()` pipeline.
 

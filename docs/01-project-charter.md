@@ -1,6 +1,6 @@
 # ai-lint Project Charter
 
-> **Version**: v0.1.0 | **Date**: 2026-07-20 | **Status**: Fully Built | **License**: MIT (Pure Altruistic Open Source)
+> **Version**: v0.1.0 | **Date**: 2026-07-20 | **Status**: Fully Built | **License**: MIT
 
 ---
 
@@ -72,7 +72,7 @@ It is not "config format knowledge" (which is publicly available). It is the **a
 
 ## 3. Supported File Types
 
-ai-lint scans **10 file types** across 5 AI coding tools and ecosystems:
+ai-lint scans **8 distinct file types** (plus aliases) across 5 AI coding tools and ecosystems:
 
 | File | Used By | Detection Dimensions |
 |------|---------|---------------------|
@@ -98,7 +98,7 @@ Discovery also covers `.claude/`, `.codex/skills/`, `.opencode/skills/`, and `.c
 | # | Rule ID | Category | Auto-fix? |
 |---|---------|----------|:---:|
 | R1 | `no-duplicate` | Literal duplication | Yes |
-| R2 | `no-semantic-duplicate` | Semantic duplication (similarity >= 50%) | No |
+| R2 | `no-semantic-duplicate` | Semantic duplication (similarity >= 50%) | Yes |
 | R3 | `no-conflict` | Contradictory instructions (within + cross-file) | No |
 | R4 | `no-overconstrain` | Tech-stack mismatch constraints | No |
 | R5 | `no-verbose` | Verbose phrasing (CN + EN patterns) | Yes |
@@ -160,4 +160,4 @@ ai-lint does not replace any existing tool. It sits on top of all of them as a "
 - Users view token consumption with ccusage -> use ai-lint to find the root cause of waste
 - Users route models with CCR -> use ai-lint to check if routing config has conflicts
 
-**Symbiotic, not competitive.**
+Positioned to complement existing tools rather than replace them.
