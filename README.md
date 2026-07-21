@@ -18,6 +18,7 @@ npx @itdest/ai-lint
 
 - [Installation](#installation)
 - [Quick Start](#quick-start)
+- [Integrations — AI Tools](#integrations----ai-tools)
 - [What It Detects](#what-it-detects)
 - [Command Reference](#command-reference)
   - [`ai-lint` — Scan](#ai-lint----scan)
@@ -108,6 +109,27 @@ al stats
 
   💡 Run ai-lint fix to auto-fix 4 issues
 ```
+
+---
+
+## Integrations — AI Tools
+
+Install ai-lint into your AI coding agent so it can check its own config files during conversations. Full guide: [`integrations/README.md`](integrations/README.md)
+
+**How it works**: Each integration adds a skill or rule file that the AI agent reads during conversations. The agent can then check config health on demand ("check my config health") or automatically after editing config files. No API keys, no network calls — the checks run locally via the ai-lint CLI.
+
+| Tool | Install | Method |
+|------|---------|--------|
+| **Claude Code** | `al install claude` | Installs ai-lint skill into `.claude/skills/ai-lint/` |
+| **Codex CLI** | `al install codex` | Installs ai-lint skill into `.codex/skills/ai-lint/` |
+| **OpenCode** | `al install opencode` | Installs ai-lint skill into `.opencode/skills/ai-lint/` |
+| **Qoder** | `al install qoder` | Appends config health rule to `AGENTS.md` |
+| **Cursor** | `al install cursor` | Appends config health rule to `.cursorrules` |
+| **Windsurf** | `al install windsurf` | Appends config health rule to `.windsurfrules` |
+| **Gemini CLI** | `al install gemini` | Appends config health rule to `GEMINI.md` |
+| **GitHub Copilot** | `al install copilot` | Appends config health rule to `copilot-instructions.md` |
+
+All tools at once: `al install all`. Requires global install (`npm i -g @itdest/ai-lint`). For manual installation without global install, see [`integrations/README.md`](integrations/README.md).
 
 ---
 
@@ -405,23 +427,6 @@ const single = runLint({
 
 ---
 
-## Integrations — AI Tools
-
-Install ai-lint into your AI coding agent so it can check its own config files during conversations. Full guide: [`integrations/README.md`](integrations/README.md)
-
-| Tool | Install | What It Does |
-|------|---------|-------------|
-| **Claude Code** | `cp integrations/claude-code/SKILL.md .claude/skills/ai-lint/` | Claude auto-checks config after edits |
-| **Codex CLI** | `cp integrations/codex/SKILL.md .codex/skills/ai-lint/` | Codex auto-checks config after edits |
-| **OpenCode** | `cp integrations/opencode/SKILL.md .opencode/skills/ai-lint/` | OpenCode auto-checks config after edits |
-| **Qoder** | `al init agents` | AGENTS.md includes config quality rule (after global install) |
-| **Cursor** | `cat integrations/cursor/.cursorrules >> .cursorrules` | Cursor checks config after edits |
-| **Windsurf** | `cat integrations/windsurf/.windsurfrules >> .windsurfrules` | Windsurf checks config after edits |
-| **Gemini CLI** | `cat integrations/gemini/GEMINI.md >> GEMINI.md` | Gemini checks config after edits |
-| **GitHub Copilot** | `cat integrations/copilot/copilot-instructions.md >> copilot-instructions.md` | Copilot checks config after edits |
-
----
-
 ## Why ai-lint?
 
 AI config files accumulate issues over time: duplicate rules, conflicting instructions, verbose phrasing that wastes context window tokens, and references to files that no longer exist. Manual review doesn't scale as configs grow across multiple tools and team members.
@@ -450,12 +455,13 @@ ai-lint scans your AI config files, assigns a health score, and auto-fixes what 
 
 ## Roadmap
 
-**ai-lint is evolving from a single-file checker to a system-wide diagnostics engine** — from finding individual file issues to analyzing the health of your entire AI development configuration.
+**ai-lint is evolving from a single-file checker to a system-wide diagnostics engine.** The roadmap is validation-first: v0.2 ships a focused MVP, then a validation gate decides whether to continue — features are shipped and validated one version at a time, not committed upfront.
 
 | Version | Theme | Key Features |
 |---------|-------|--------------|
-| **v0.2** | Token Era | Token analysis engine, conflict detection (hard/soft/trigger) |
-| **v0.3** | Ecosystem | PR diff bot, dilution detection, auto-fix pre-commit, `.ai-lintrc.json` |
+| **v0.2** | Moat MVP | Token analysis engine, toolchain coverage detection |
+| **🚦 Gate** | Validation | Observe real adoption before building further |
+| **v0.3** | Ecosystem | PR diff bot, auto-fix pre-commit, `.ai-lintrc.json`, conflict/dilution detection |
 | **v0.4** | Deep Diagnostics | Reference integrity, cross-file drift, rot detection, methodology audit |
 | **v1.0** | Stable | Architecture consolidation, i18n, rule marketplace foundation |
 

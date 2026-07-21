@@ -13,7 +13,7 @@
 | 03 | [Technical Architecture](./03-technical-architecture.md) | Architecture diagram, 4 production dependencies, Rule interface, Parser design |
 | 04 | [Development Plan](./04-development-plan.md) | 2-week / 10-day retrospective |
 | 05 | [Research Report Summary](./05-research-report.md) | 6-stream merged findings, falsification validation |
-| 06 | [Improvement Roadmap](./06-improvement-roadmap.md) | v0.2 → v1.0 roadmap, token analyzer, conflict detection, deep diagnostics（中文） |
+| 06 | [Improvement Roadmap](./06-improvement-roadmap.md) | v0.2 → v1.0 validation-first roadmap, token analyzer, toolchain coverage, deep diagnostics（中文） |
 | 06-EN | [Improvement Roadmap (EN)](./06-improvement-roadmap-en.md) | English version of the improvement roadmap |
 
 ---

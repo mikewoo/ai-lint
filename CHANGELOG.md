@@ -8,10 +8,12 @@ All notable changes to ai-lint will be documented in this file.
 
 See [Improvement Roadmap](./docs/06-improvement-roadmap.md) for full details.
 
+The roadmap is validation-first: a validation gate follows v0.2, and v0.3+ proceeds only if adoption data clears it.
+
 | Version | Name | Highlights |
 |---------|------|-----------|
-| v0.2 | Token Era | Token analysis engine, conflict detection (hard/soft/trigger) |
-| v0.3 | Ecosystem | PR diff, dilution detection, auto-fix pre-commit, `.ai-lintrc.json` |
+| v0.2 | Moat MVP | Token analysis engine, toolchain coverage detection |
+| v0.3 | Ecosystem | PR diff, auto-fix pre-commit, `.ai-lintrc.json`, conflict/dilution detection |
 | v0.4 | Deep Diagnostics | Reference integrity, cross-file drift, rot detection, methodology audit |
 | v1.0 | Stable | Architecture consolidation, performance, docs, i18n |
 

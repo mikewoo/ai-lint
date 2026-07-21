@@ -2,7 +2,7 @@
 
 > **Version**: v1.0 | **Date**: 2026-07-21 | **Status**: Planning
 >
-> Based on deep analysis of the sdad-agentpm (v18.0.0) initialized project pmAgent, and ongoing research into the AI programming configuration ecosystem.
+> Based on deep analysis of a large real-world AI agent project (700+ files, referred to below as "the reference project"), and ongoing research into the AI programming configuration ecosystem.
 
 ---
 
@@ -12,9 +12,9 @@
 
 | Source | Content | Insight |
 |------|------|------|
-| sdad-agentpm deep research | 102 agents, 20 source documents, 25 claim verifications | The npm package is a shell (7 files/26.5KB); value lies in the methodology system and Hook enforcement |
-| pmAgent project dissection | 722 files, 8-layer architecture file-by-file analysis | Hook quality gates + knowledge base layering + Skill process definitions are the core design assets |
-| ai-lint testing on pmAgent | 22 files scanned, 21 errors / 41 warnings | Exposed real issues: broken references, content bloat, cross-file drift |
+| Large agent framework research | 102 agents, 20 source documents, 25 claim verifications | The npm package is a shell (7 files/26.5KB); value lies in the methodology system and Hook enforcement |
+| Reference project dissection | 700+ files, 8-layer architecture file-by-file analysis | Hook quality gates + knowledge base layering + Skill process definitions are the core design assets |
+| ai-lint testing on the reference project | 22 files scanned, 21 errors / 41 warnings | Exposed real issues: broken references, content bloat, cross-file drift |
 | 57-competitor survey | 6 segments fully covered | Token analysis + config quality detection is an untapped market |
 
 ### 0.2 Product Positioning Evolution
@@ -28,37 +28,71 @@ Core shift: from "checking if individual files are well-written" to "helping use
 
 ### 0.3 Decision Framework
 
-Each feature is evaluated against three criteria:
+Each feature is evaluated against four criteria:
 
 | Criterion | Question |
 |------|------|
 | Universality | Will every AI config user encounter this? |
 | Moat | Can any other tool solve this besides ai-lint? |
 | Actionability | Can users take immediate action after seeing the result? |
+| **AI-resistance** | **Can the user get an equal or better result by simply asking an LLM ("review my config for problems")?** |
 
-3/3 → P0, 2/3 → P1, 1/3 → P2, 0/3 → Won't do.
+The first three raise priority the more they are satisfied; the fourth is a **veto**: if an LLM does it better in conversation, the feature has no standalone reason to exist unless it offers determinism, hallucination-resistance, or zero token cost.
+
+### 0.4 Moat vs Replaceable (Core Insight)
+
+ai-lint's biggest competitor is not other linters — it's **the LLM itself**. When users hit a bloated or contradictory config, the natural move is "ask the AI to fix it," not "install a tool." LLMs often outperform regex/dictionary rules on semantic tasks, and they're already in the user's workflow.
+
+So capabilities must be split into two classes:
+
+| Type | Features | Basis |
+|------|------|---------|
+| 🟢 **Moat** (LLM can't/won't do well) | Token counting & distribution, dead reference detection, cross-file hash drift, toolchain coverage detection | Requires deterministic computation, filesystem facts, hallucination-resistance, zero token cost |
+| 🟡 **Replaceable** (LLM often does better) | Semantic dedup, wording compression, conflict judgment, methodology audit | Depends on semantic understanding; "just ask the AI" gives a better experience |
+
+**Product strategy**: Moat features are the core selling point and differentiator; replaceable features are positioned as "fast, batch, token-free rough passes," not headliners. This drives the feature prioritization below — counterintuitively, the most valuable features are often the deterministic checks listed later (dead references, drift), not the flashy Token optimization suggestions.
 
 ---
 
 ## 1. Version Planning Overview
 
-| Version | Name | Goal | Est. Duration |
-|------|------|------|---------|
-| **v0.2** | Token Era | Token analysis engine + rule conflict detection | 1-2 weeks |
-| **v0.3** | Ecosystem | PR visibility + dilution detection + auto-fix pre-commit | 1-2 weeks |
-| **v0.4** | Deep Diagnostics | Reference integrity + cross-file drift + rot detection + methodology audit | 1-2 weeks |
-| **v1.0** | Stable | Architecture consolidation, performance, docs, rule marketplace foundation | 1 week |
+> **Important: this is not a 7-week upfront commitment, but a "validation-first" phased path.** A hard validation gate follows v0.2 (below). v0.3+ proceeds only if adoption data clears the gate. Otherwise, the problem is not "not enough features" but the category demand itself — in which case, pivot to validating demand rather than piling on features in the wrong direction.
+
+| Version | Name | Goal | Est. Duration | Precondition |
+|------|------|------|---------|---------|
+| **v0.2** | Moat MVP | Token analysis engine + toolchain coverage detection (the two most solid deterministic features) | 1-2 weeks | None, start now |
+| **🚦 Validation Gate** | — | Ship v0.2, observe 2-4 weeks of real adoption data (see §8) | — | v0.2 shipped |
+| **v0.3** | Ecosystem | PR visibility + auto-fix pre-commit + `.ai-lintrc.json` + rule conflict/dilution | 1-2 weeks | **Gate cleared** |
+| **v0.4** | Deep Diagnostics (determinism-first) | Reference integrity + cross-file drift + rot detection (moat core); methodology audit (optional bonus) | 1-2 weeks | v0.3 has positive feedback + signals from complex-config users |
+| **v1.0** | Stable | Architecture consolidation, performance, docs | 1 week | v0.4 validated |
+
+**Why this differs from the original plan**:
+
+1. **v0.2 narrowed** — The original plan put "rule conflict detection" in v0.2, but conflict judgment is semantic and LLMs do it better (🟡 replaceable), so it moves to v0.3. v0.2 keeps only two purely deterministic, LLM-can't-do features (Token counting + toolchain coverage) as the minimal verifiable moat.
+2. **Validation gate inserted** — The original plan ran straight to v1.0, designing all 14 rules and 6 flags before any real user feedback. That is textbook "over-building before validation." Now: ship one, validate one.
+3. **v0.4 internally reordered** — The original plan listed methodology audit alongside reference/drift. Now reference/drift/rot (moat) is the main line; methodology audit (🟡 subjective, replaceable) is demoted to an optional bonus.
 
 ---
 
-## 2. v0.2 — Token Era (P0)
+## 2. v0.2 — Moat MVP (P0)
 
-### 2.1 Goals
+### 2.1 Goals & Scope
 
-Enable users to answer three questions:
-1. How many tokens does my AI config consume?
-2. Which files/sections are the biggest token consumers?
-3. What can be trimmed, and exactly how much can I save?
+v0.2 is the **minimal verifiable moat** — only two LLM-can't-do deterministic features:
+
+1. **Token analysis engine** (§2.2) — lets users answer: how many tokens does my config consume? which are the big consumers? how much can I save?
+2. **Toolchain coverage detection** (§2.2.2, Dimension 1) — detects rules already enforced by ESLint/Prettier that are redundantly restated in the AI config.
+
+> **Scope change**: The original plan included "rule conflict detection" in v0.2. Conflict judgment depends on semantic understanding, which LLMs do better in conversation (🟡 replaceable), so it moves to v0.3. v0.2 focuses on purely deterministic capabilities — the goal is to validate, at minimal cost, whether the "deterministic config checking" category has any demand. This is the roadmap's first and most critical assumption.
+
+### 2.1.1 Why These Two First
+
+| Feature | AI-resistance | Reason |
+|------|:--:|------|
+| Token counting & distribution | 🟢 Strong | LLMs can't count tokens accurately, nor will they proactively compute distribution. Determinism + visualization is a real need |
+| Toolchain coverage detection | 🟢 Strong | LLMs won't go read your `.eslintrc` and cross-reference. Objective, zero false positives, clear token savings |
+
+These are the two easiest-to-implement, least-replaceable items on the §0.4 moat list. Prove they get used, then discuss the rest.
 
 ### 2.2 Token Analysis Engine
 
@@ -301,7 +335,7 @@ Scenarios:
 │   → Rule won't apply when using Windsurf
 │
 └── design-advisor.md: "Must read knowledge/conventions/coding.md first"
-    .claude/agentpm-knowledge/conventions/coding.md: File does not exist
+    .claude/knowledge/conventions/coding.md: File does not exist
     → Mandatory prerequisite step cannot execute
 ```
 
@@ -335,11 +369,12 @@ src/
 
 | Item | Deliverable | Acceptance Criteria |
 |------|--------|---------|
-| Token analysis engine | `src/analyzer/token.ts` + report rendering | Categorized report for pmAgent project, token estimation error <10%, semantic segmentation macro-F1 >= 0.85 |
-| Hard conflict detection | Cross-file conflict scanning | Detect at least 1 real conflict in pmAgent |
-| Trigger conflict detection | `no-trigger-conflict` rule | Detect trigger word overlap in pmAgent |
-| Tests | ~20 new tests | All passing, covering Token + conflict checks |
+| Token analysis engine | `src/analyzer/token.ts` + report rendering | Categorized report for the reference project, token estimation error <10%, semantic segmentation macro-F1 >= 0.85 |
+| Toolchain coverage detection | ESLint/Prettier config parsing + cross-reference | Detect at least 1 redundant rule already covered by the toolchain |
+| Tests | ~20 new tests | All passing, covering Token + toolchain coverage detection |
 | Docs | README update + new CLI flag docs | `npx ai-lint --help` shows new options |
+
+> **Note**: Rule conflict detection (§2.3) originally belonged to v0.2; because it involves semantic judgment (🟡 replaceable), it has moved to v0.3. §2.3 below retains its design but is now scoped to v0.3.
 
 ---
 
@@ -541,7 +576,7 @@ v0.2-v0.3 introduce many new rules, each with thresholds. To avoid hardcoded val
   },
   "ignore": [
     "skills/gpt-image-generator/**",
-    ".claude/agentpm-knowledge/**"
+    ".claude/knowledge/**"
   ],
   "deep": {
     "checkRefs": true,
@@ -571,11 +606,11 @@ src/
 
 | Item | Deliverable | Acceptance Criteria |
 |------|--------|---------|
-| `ai-lint --diff` | Full diff mode functionality | Meaningful diff report for pmAgent commit scenarios |
+| `ai-lint --diff` | Full diff mode functionality | Meaningful diff report for the reference project's commit scenarios |
 | GitHub Actions template | `integrations/github-actions/` | Runs correctly on test repo |
 | `ai-lint install --ci` | CLI extension | One-command CI config file generation |
 | `.ai-lintrc.json` config | `src/config/` loading + validation + schema | Custom thresholds take effect, ignore list works |
-| Rule dilution detection | `no-dilution` rule | Detects pmAgent CLAUDE.md's 33-rule dilution |
+| Rule dilution detection | `no-dilution` rule | Detects the reference project's CLAUDE.md dilution |
 | `--staged` flag | CLI extension | Only checks staged files |
 | Tests | ~20 new tests | Covering diff/staged/dilution/config |
 
@@ -702,7 +737,7 @@ Target scenarios:
 #### 4.5.3 Output Format
 
 ```
-Methodology Audit: pmAgent
+Methodology Audit: my-project
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Spec-First            ✅  15/15  req-doc skill + SRS templates
 Agent-Orchestrated    ✅  15/15  21 agents + orchestration rules
@@ -743,8 +778,8 @@ ai-lint --deep --no-check-drift   # All deep checks except drift
 
 | Item | Deliverable | Acceptance Criteria |
 |------|--------|---------|
-| `--deep` mode | Reference + drift + rot detection | Detect at least 3 real issues in pmAgent |
-| `--audit` mode | Methodology coverage scoring | Produce differentiated results for pmAgent vs empty project |
+| `--deep` mode | Reference + drift + rot detection | Detect at least 3 real issues in the reference project |
+| `--audit` mode | Methodology coverage scoring | Produce differentiated results for the reference project vs empty project |
 | Tests | ~25 new tests | Covering all deep check rules |
 | Docs | Roadmap update | Mark v0.4 items as implemented |
 
@@ -798,7 +833,7 @@ Architecture consolidation, performance optimization, documentation completion.
 Week 1-2    v0.2 Token Era
             ├── Token analysis engine
             ├── Rule conflict detection (hard/soft/trigger)
-            └── Validation on pmAgent + zcf projects
+            └── Validation on the reference project + normal-size projects
 
 Week 3-4    v0.3 Ecosystem
             ├── PR visibility (--diff + GitHub Actions)
@@ -822,32 +857,58 @@ Week 7      v1.0 Stable
 
 ---
 
-## 8. Success Metrics
+## 8. Validation Gates & Success Metrics
 
-In addition to functional acceptance, track the following metrics per version:
+These metrics are **not a footnote, but go/no-go gates between versions** (corresponding to the validation gate in §1). Each gate decides "whether to proceed to the next version," not a retrospective.
+
+### 8.1 🚦 v0.2 → v0.3 Validation Gate (most critical)
+
+After shipping v0.2, observe for 2-4 weeks and answer one question: **Does the "deterministic config checking" category have demand beyond extremely complex projects?**
+
+| Metric | Proceed signal (→ v0.3) | Stop signal (→ pivot to validating demand) |
+|------|:--:|:--:|
+| npm weekly downloads | >= 100 | < 50 |
+| Use by non-self-maintained repos (dependency / CI reference) | >= 3 | 0 |
+| Token analysis screenshots/discussion in community | >= 3 times | 0 |
+| Proactive feature-request issues (not bugs, but "I want X") | >= 2 | 0 |
+
+**Action when stop signals appear**: The problem is not "not enough features" but "the category may lack demand." Stop adding features and instead: run user interviews, write content to validate the pain point, or reposition the moat features as a one-shot `npx` command (no retention goal), accepting that this is a low-frequency tool.
+
+### 8.2 Later-version metrics (tracked only after the gate clears)
 
 | Version | Key Metric | Target | Measurement |
 |------|---------|:----:|------|
-| v0.2 | npm weekly downloads | > 100 | npm registry API |
-| v0.2 | Token analysis reports cited by users on social media | >= 3 times | Manual tracking |
 | v0.3 | GitHub Actions template used by non-self-maintained repos | >= 5 repos | GitHub search |
-| v0.4 | Community blog/tutorial produced from `--audit` mode | >= 1 article | Manual tracking |
+| v0.3 | Actual retention of pre-commit / PR integration (weekly active) | >= 20 repos | Requires opt-in anonymous stats (v0.3 design) |
+| v0.4 | Complex-config users (multi-tool/multi-skill) proactively request --deep | >= 5 clear signals | GitHub Issues / Discussions |
 | v1.0 | npm total downloads | > 1,000 | npm registry API |
 | v1.0 | GitHub stars | > 100 | GitHub API |
 | v1.0 | Community feedback issues (not self-submitted) | >= 10 issues | GitHub Issues |
 
-> These metrics are not for "evaluation" but for **judging whether the direction needs adjustment**. If v0.2 weekly downloads are < 50 two weeks after release, either the value proposition isn't reaching users or the target audience is wrong — prioritize promotion over piling on more features.
+> **v0.4's special precondition**: Deep diagnostics (reference/drift) mainly serve complex-config projects. If no genuine "my project is complex, I need this" signal appears during v0.3, v0.4 should be deferred — don't build features for a hypothetical very-large-project user.
 
 ---
 
 ## 9. Risks & Mitigations
+
+### 9.1 Strategic Risks (make-or-break)
+
+| Risk | Description | Mitigation |
+|------|------|---------|
+| **The LLM itself is a competitor** | Users can "just ask the AI to fix my config," and LLMs are stronger on semantic tasks. ai-lint's replaceable rules (dedup/compress/conflict) depreciate as models improve | Focus on moat features (Token counting, dead references, hash drift, toolchain coverage) — things LLMs can't do. Position replaceable features only as "fast batch rough passes," not headliners |
+| **Demand may not exist (the other reading of 0 competitors)** | "57 competitors, 0 doing detection" could be a blue ocean, or "no demand, so nobody built it." A bad config's pain is far weaker than bad code (which causes production bugs) | v0.2 validation gate (§8.1). Pivot to demand validation immediately if stop signals appear; don't blindly pile on features |
+| **Low-frequency tool, hard to retain** | Users may edit CLAUDE.md once a month. Low frequency = hard to form a habit, installed and forgotten | v0.3's PR/pre-commit integration is the only frequency-raising lever; if retention stays poor, accept a "one-shot `npx` command" positioning, don't force DAU |
+| **Token value diluted by growing windows** | Context windows grow every quarter, reducing the urgency of Token optimization | Shift the Token analysis pitch from "save money" to "see what the AI actually reads" (transparency value doesn't decay with window size); don't bet the whole narrative on Tokens |
+| **Platform built-in checks** | Claude Code / Cursor may build in config health checks | Strengthen cross-tool capabilities (drift, consistency) — platforms only check their own format, not across tools |
+
+### 9.2 Execution Risks
 
 | Risk | Impact | Mitigation |
 |------|------|---------|
 | Token estimation bias too large | Loss of user trust | Use known tokenizer (tiktoken) as reference benchmark, label error margins |
 | Conflict detection false positive rate too high | User fatigue | Only do deterministic detection; don't report fuzzy matches |
 | Deep check performance poor | --deep unusable | File read caching + incremental checks + parallelization |
-| Slow user growth | Lack of feedback for feature validation | Prioritize dogfooding on known projects (pmAgent, zcf) |
+| dogfooding sample bias | The reference project is extremely complex; tuning to it drifts away from normal users | Beyond the reference project, validate on >= 3 "normal-size" configs (30-80 line CLAUDE.md) to avoid overfitting to an outlier |
 | AI config standard fragmentation | Rules need frequent adaptation | Unified internal IR; format differences handled at parse layer |
 
 ---
