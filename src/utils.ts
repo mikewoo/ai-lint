@@ -12,20 +12,13 @@ export function truncate(text: string, maxLen: number): string {
  * - CJK Unified Ideographs (U+4E00–U+9FFF): 1.0 token per character
  * - All other characters: 0.25 token per character
  *
- * Calibrated against BPE tokenizers (2026-07-22, 7 content types):
- *   cl100k_base (GPT-4): 17% aggregate error
- *   o200k_base  (GPT-4o): 6.6%
- *   p50k_base   (GPT-3):  52%  (much less efficient on CJK — older tokenizer)
+ * Calibrated against modern BPE tokenizers (2026-07-22, 7 content types):
+ *   o200k_base  (GPT-4o):   6.6% aggregate error
+ *   cl100k_base (GPT-4):   17%
  *
- * Different BPE tokenizers handle CJK characters very differently
- * (tokenizer-to-tokenizer variance up to 174% on the same CJK-paragraph
- * input), so a single-coefficient character heuristic cannot be equally
- * accurate across all models. Modern tokenizers (cl100k, o200k, Claude)
- * are roughly comparable; p50k is the outlier and is not targeted.
- *
- * Per-line deviations can be up to ~40% even on modern tokenizers.
- * This is a relative-comparison and reporting aid, not an exact
- * accounting. Use the target model's native tokenizer for precise counts.
+ * Per-line deviations can reach ~40%. This is a relative-comparison and
+ * reporting aid — use the target model's native tokenizer for exact counts.
+ * Future: a per-model coefficient preset in .ai-lintrc.json (v0.3).
  */
 export function estimateTokens(text: string): number {
   let tokens = 0
