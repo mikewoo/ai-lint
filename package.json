@@ -1,6 +1,6 @@
 {
   "name": "@itdest/ai-lint",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "The linter and optimizer for AI prompt files. Like ESLint for JavaScript, but for your CLAUDE.md, rules, and skills.",
   "type": "module",
   "bin": {

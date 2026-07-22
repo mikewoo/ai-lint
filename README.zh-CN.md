@@ -3,7 +3,7 @@
 > AI 编程配置的检查与优化工具。像 ESLint 之于 JavaScript，ai-lint 之于 AI 配置。
 
 <p align="center">
-  <img alt="version" src="https://img.shields.io/badge/version-0.1.2-34D058">
+  <img alt="version" src="https://img.shields.io/badge/version-0.2.0-34D058">
   <img alt="license" src="https://img.shields.io/badge/license-MIT-34D058">
   <img alt="node" src="https://img.shields.io/badge/node-%3E%3D18-34D058">
 </p>
