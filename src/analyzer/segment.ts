@@ -31,12 +31,23 @@ const METHODOLOGY_KEYWORDS = [
   '理念',
   '哲学',
   '原则',
+  '覆盖',
+  '机制',
+  '编排',
+  '交付',
+  'SDAD',
   'methodology',
   'philosophy',
   'principle',
   'rationale',
   'pillar',
 ]
+
+/** Bold/italic emphasis that wraps a short section label like **五大支柱：** */
+const EMPHASIS_LABEL_RE = /^\*{1,2}[^*]+\*{1,2}[：:\s]*$/
+
+/** HTML comment */
+const HTML_COMMENT_RE = /^<!--/
 
 /** Matches a line that is purely decorative (rules, emoji-only, ASCII art). */
 const DECORATION_RE =
@@ -148,14 +159,26 @@ function classifyBlock(block: RawBlock): SegmentCategory {
   // Whole block is decorative (every line is a separator / emoji / ASCII art)
   if (nonBlank.every((l) => DECORATION_RE.test(l))) return 'decoration'
 
-  // Markdown table → trigger-table if header mentions trigger/keyword, else rule
+  // HTML comment → meta (boilerplate, not actionable)
+  if (nonBlank.some((l) => HTML_COMMENT_RE.test(l))) return 'meta'
+
+  // Markdown table → trigger-table if header mentions trigger/keyword, else methodology-ish
   const tableRows = nonBlank.filter((l) => TABLE_ROW_RE.test(l))
   if (tableRows.length >= 2) {
-    return TRIGGER_HEADER_RE.test(tableRows[0]) ? 'trigger-table' : 'rule'
+    if (TRIGGER_HEADER_RE.test(tableRows[0])) return 'trigger-table'
+    // Tables that are NOT trigger tables are usually reference/lookup tables
+    // (methodology pillars, comparison tables) — not actionable rules
+    return 'methodology'
   }
 
   // Heading-only block → meta (section scaffolding, not content)
   if (nonBlank.every((l) => HEADING_RE.test(l))) return 'meta'
+
+  // Short emphasis label like **五大支柱：** or **Version:** → meta
+  if (nonBlank.every((l) => EMPHASIS_LABEL_RE.test(l) || l.length < 3)) return 'meta'
+
+  // Blockquote version/update line (e.g. "> **版本：v18**") → meta
+  if (nonBlank.length === 1 && /^>/.test(first)) return 'meta'
 
   // List items → rule (actionable instructions)
   if (nonBlank.some((l) => LIST_ITEM_RE.test(l))) return 'rule'
