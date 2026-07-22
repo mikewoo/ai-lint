@@ -171,6 +171,9 @@ ai-lint --rules=no-duplicate,no-verbose
 # Cross-file detection (skill overlap, cross-file conflicts)
 ai-lint --cross-files
 
+# Token budget report only (skip lint)
+ai-lint --tokens
+
 # CI mode (exit 1 if issues found)
 ai-lint --ci
 
@@ -183,6 +186,39 @@ ai-lint --no-color
 - Pre-commit hook to prevent bad configs from being committed
 - CI pipeline quality gate
 - JSON output for dashboards or monitoring tools
+
+When ESLint or Prettier config is present, the scan also reports **toolchain coverage** — rules in your AI config that the toolchain already enforces (e.g. "use const not var" when ESLint's `no-var` is on), so you can remove them to save tokens. This only appears when the tool config actually exists.
+
+### Token Budget
+
+See where your AI config's tokens go. Every config file is segmented into categories (rules, trigger tables, methodology prose, examples, decoration, meta) and counted.
+
+```bash
+# Compact token budget report
+ai-lint --tokens
+
+# Detailed breakdown per file and category
+ai-lint stats --tokens
+
+# Machine-readable
+ai-lint --tokens --json
+```
+
+Example output:
+
+```
+  Token Budget
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  CLAUDE.md                          3,200 tokens (34%)
+    ├── Rules              1,200 (37%) ████░░░░░░ core
+    ├── Trigger table        800 (25%) ███░░░░░░░ keep
+    ├── Methodology          700 (22%) ██░░░░░░░░ ⚠️ trimmable
+    └── Decoration           300  (9%) █░░░░░░░░░ 💡 removable
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Total: 3,200 tokens (1.6% of a 200K context window)
+```
+
+> Token counts are estimates from a character-based heuristic (CJK weighted higher), meant for relative comparison and spotting bloat — not exact billing. Real BPE tokenizers vary by model.
 
 ### `ai-lint fix` — Auto-Fix
 

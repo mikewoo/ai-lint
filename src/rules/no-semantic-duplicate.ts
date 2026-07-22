@@ -1,7 +1,6 @@
 import { textSimilarity } from '../fixer/deduplicate.js'
 import { parseRules } from '../parser/markdown.js'
 import type { LintIssue } from '../types.js'
-import { truncate } from '../utils.js'
 import { isConflictPair } from './no-conflict.js'
 
 /** Minimum similarity threshold to consider as semantic duplicate */

@@ -1,5 +1,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { basename, resolve } from 'node:path'
+import { type TokenBudget, analyzeTokenBudget } from './analyzer/token-budget.js'
+import { type ToolchainRedundancy, detectToolchainCoverage } from './analyzer/toolchain.js'
 import { detectCrossFileConflicts } from './cross-files/conflict.js'
 import { type SkillInfo, detectSkillOverlap } from './cross-files/skill-overlap.js'
 import { type FoundFile, findFiles, shortPath } from './discovery/find-files.js'
@@ -139,6 +141,43 @@ export function runFix(options: LintOptions = {}): FixReport {
   }
 
   return { result: summarize(fileResults), fixed: fixedCount, details: fixDetails }
+}
+
+/**
+ * Analyze the token budget of all discovered AI config files.
+ */
+export function runTokenBudget(options: LintOptions = {}): TokenBudget {
+  const { cwd, files } = resolveFiles(options)
+  const inputs = files.map((f) => ({
+    name: f.type === 'skill' ? shortPath(f.path, cwd) : f.name,
+    content: readFileSync(f.path, 'utf-8'),
+  }))
+  return analyzeTokenBudget(inputs)
+}
+
+/** Toolchain coverage result for one AI config file. */
+export interface ToolchainCoverageResult {
+  file: string
+  redundancies: ToolchainRedundancy[]
+}
+
+/**
+ * Detect toolchain-covered redundant rules across all discovered AI config
+ * files. Only reports when a toolchain config (ESLint/Prettier) is present.
+ */
+export function runToolchainCoverage(options: LintOptions = {}): ToolchainCoverageResult[] {
+  const { cwd, files } = resolveFiles(options)
+  const results: ToolchainCoverageResult[] = []
+
+  for (const file of files) {
+    const content = readFileSync(file.path, 'utf-8')
+    const redundancies = detectToolchainCoverage(cwd, content)
+    if (redundancies.length > 0) {
+      results.push({ file: shortPath(file.path, cwd), redundancies })
+    }
+  }
+
+  return results
 }
 
 export function runCrossFiles(options: LintOptions = {}): LintResult {

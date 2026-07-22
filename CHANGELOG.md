@@ -4,6 +4,31 @@ All notable changes to ai-lint will be documented in this file.
 
 ---
 
+## [Unreleased] v0.2.0 — Moat MVP
+
+### Added
+- **Token analysis engine** — semantic segmentation of AI config files into
+  categories (rule / trigger-table / methodology / example / decoration / meta),
+  with per-file and per-category token breakdown.
+  - `ai-lint --tokens` — token budget report only (skips lint)
+  - `ai-lint stats --tokens` — detailed token budget breakdown
+  - `--tokens --json` for machine-readable output
+- **Toolchain coverage detection** — flags AI config rules already enforced by
+  ESLint/Prettier (e.g. "use const not var" when ESLint `no-var` is on), so they
+  can be removed to save tokens. Zero false positives: only triggers when the
+  tool config actually exists. Shown automatically in the default scan.
+  - Supports `.eslintrc.json`, `.eslintrc` (legacy + flat array form),
+    `.prettierrc`, `.prettierrc.json`, and `package.json` fields
+  - JS-form configs (`.eslintrc.js`, `eslint.config.js`) deferred to v0.3
+- New public API: `runTokenBudget`, `runToolchainCoverage`, `analyzeTokenBudget`,
+  `segment`, `detectToolchainCoverage`
+- 19 new tests covering segmentation, token aggregation, and toolchain coverage
+
+### Changed
+- Removed unused `truncate` import in `no-semantic-duplicate.ts`
+
+---
+
 ## [Planned] v1.0.0
 
 See [Improvement Roadmap](./docs/06-improvement-roadmap.md) for full details.

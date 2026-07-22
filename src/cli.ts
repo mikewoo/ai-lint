@@ -4,9 +4,10 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import chalk from 'chalk'
 import { Command } from 'commander'
-import { runCrossFiles, runFix, runLint } from './engine.js'
+import { runCrossFiles, runFix, runLint, runTokenBudget, runToolchainCoverage } from './engine.js'
 import type { LintResult } from './report/render.js'
 import { calcHealth, render, renderJson } from './report/render.js'
+import { renderTokenBudget, renderTokenBudgetJson } from './report/token-budget.js'
 
 /** Read the version from package.json so it stays in sync with the published package. */
 function readVersion(): string {
@@ -17,6 +18,11 @@ function readVersion(): string {
   } catch {
     return '0.0.0'
   }
+}
+
+/** Truncate a rule's text for compact single-line display. */
+function truncateRule(text: string, maxLen = 50): string {
+  return text.length > maxLen ? `${text.slice(0, maxLen)}…` : text
 }
 
 const program = new Command()
@@ -32,6 +38,7 @@ program
   .option('--json', 'output results as JSON')
   .option('--no-color', 'disable colored output (useful in CI)')
   .option('--cross-files', 'enable cross-file detection')
+  .option('--tokens', 'output token budget analysis only (skip lint)')
   .option('--rules <ids>', 'comma-separated rule IDs to limit detection to')
   .action(
     (
@@ -41,6 +48,7 @@ program
         json?: boolean
         noColor?: boolean
         crossFiles?: boolean
+        tokens?: boolean
         rules?: string
       },
     ) => {
@@ -53,8 +61,16 @@ program
         chalk.level = 0
       }
 
+      // --tokens: token budget report only, skip linting
+      if (options.tokens) {
+        const budget = runTokenBudget({ cwd, targetFile })
+        console.log(options.json ? renderTokenBudgetJson(budget) : renderTokenBudget(budget))
+        return
+      }
+
       const result = runLint({ cwd, targetFile, rulesFilter: options.rules })
       const crossResult = options.crossFiles ? runCrossFiles({ cwd }) : null
+      const toolchainResults = runToolchainCoverage({ cwd, targetFile })
 
       if (options.json) {
         const jsonOutput = crossResult
@@ -71,6 +87,24 @@ program
             console.log(`  ${color(`${icon} ${issue.ruleId}`)}  ${issue.file}  ${issue.message}`)
           }
           console.log()
+        }
+        if (toolchainResults.length > 0) {
+          console.log(chalk.bold('  💡 Toolchain Coverage\n'))
+          let totalSaved = 0
+          for (const { file, redundancies } of toolchainResults) {
+            for (const r of redundancies) {
+              totalSaved += r.tokensSaved
+              console.log(
+                `  ${chalk.cyan(`${r.tool} (${r.setting})`)} already enforces this — ${chalk.dim(`${file}:${r.line}`)}`,
+              )
+              console.log(
+                chalk.dim(
+                  `     "${truncateRule(r.ruleText)}" can be removed (~${r.tokensSaved} tokens)`,
+                ),
+              )
+            }
+          }
+          console.log(chalk.dim(`\n  Total: ~${totalSaved} tokens covered by your toolchain\n`))
         }
       }
 
@@ -410,8 +444,16 @@ program
   .command('stats')
   .description('show health score trends for AI config files')
   .argument('[path]', 'directory to scan', process.cwd())
-  .action((statsPath: string) => {
+  .option('--tokens', 'show detailed token budget breakdown')
+  .action((statsPath: string, options: { tokens?: boolean }) => {
     const cwd = resolve(statsPath || process.cwd())
+
+    // --tokens: detailed token budget report
+    if (options.tokens) {
+      console.log(renderTokenBudget(runTokenBudget({ cwd })))
+      return
+    }
+
     const result = runLint({ cwd })
 
     if (result.files.length === 0) {

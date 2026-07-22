@@ -170,6 +170,9 @@ ai-lint --rules=no-duplicate,no-verbose
 # 跨文件检测（Skill 重叠、跨文件冲突）
 ai-lint --cross-files
 
+# 仅输出 Token 预算报告（跳过 lint）
+ai-lint --tokens
+
 # CI 模式（发现问题则 exit 1）
 ai-lint --ci
 
@@ -182,6 +185,39 @@ ai-lint --no-color
 - Pre-commit hook 防止坏配置提交
 - CI 流水线质量门禁
 - JSON 输出供监控面板消费
+
+当项目存在 ESLint 或 Prettier 配置时，扫描还会报告**工具链覆盖**——你的 AI 配置里那些工具链已经强制执行的规则（比如 ESLint 开了 `no-var`，配置里又写"用 const 不用 var"），可以删掉省 token。只在对应工具配置确实存在时才提示。
+
+### Token 预算
+
+看清 AI 配置的 token 花在哪。每个配置文件被切分成若干类别（规则、触发词表、方法论说明、示例、装饰、元信息）并分别计数。
+
+```bash
+# 紧凑的 Token 预算报告
+ai-lint --tokens
+
+# 按文件和类别的详细分解
+ai-lint stats --tokens
+
+# 机器可读输出
+ai-lint --tokens --json
+```
+
+输出示例：
+
+```
+  Token Budget
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  CLAUDE.md                          3,200 tokens (34%)
+    ├── Rules              1,200 (37%) ████░░░░░░ core
+    ├── Trigger table        800 (25%) ███░░░░░░░ keep
+    ├── Methodology          700 (22%) ██░░░░░░░░ ⚠️ trimmable
+    └── Decoration           300  (9%) █░░░░░░░░░ 💡 removable
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Total: 3,200 tokens (1.6% of a 200K context window)
+```
+
+> Token 数是基于字符的启发式估算（中日韩字符权重更高），用于相对比较和发现膨胀，不是精确计费。真实 BPE tokenizer 因模型而异。
 
 ### `ai-lint fix` — 自动修复
 
